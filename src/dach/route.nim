@@ -31,4 +31,9 @@ proc addRule*(r: Router, url: string, httpMethod: string, name: string, callback
     r.endpoints[httpMethod][url] = (name: name, callback: callback)
 
 proc match*(r: Router, url: string, httpMethod: string): int =
+  # return callback & var
+  let
+    url = url.strip().strip(chars={'/'}, leading=false)
+  if not r.endpoints.hasKey(httpMethod):
+    return 1
   discard
