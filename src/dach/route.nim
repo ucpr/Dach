@@ -3,6 +3,7 @@ import logging
 import asynchttpserver
 import asyncdispatch
 import sequtils
+import strutils
 import tables
 
 var L = newConsoleLogger()
@@ -11,21 +12,23 @@ addHandler(L)
 type cbProc = proc(): string
 
 type 
-#  Route = object
-#  rule = string
-#  httpMethod = string
-#  name = string
-#   callback: cbProc
-
   Router* = ref object
     endpoints*: Table[string,
-                  Table[string,
-                    tuple[name: string, callback: cbProc]
-                ]]
+                  Table[string, tuple[name: string, callback: cbProc]]]
 
-proc add_rule*(r: Router, url: string, httpMethod: string, name: string, callback: cbProc) =
-  #r.routes.add(route)
-  discard
+proc newRouter*(): Router =
+  result = new(Router)
+  result.endpoints = initTable[string,
+                      Table[string, tuple[name: string, callback: cbProc]]]()
+
+proc addRule*(r: Router, url: string, httpMethod: string, name: string, callback: cbProc) =
+  let
+    # TODO: '/' のみの場合
+    url = url.strip().strip(chars={'/'}, leading=false)
+    httpMethod = httpMethod.toUpperAscii()
+  if not r.endpoints.hasKey(httpMethod):
+    r.endpoints[httpMethod] = initTable[string, tuple[name: string, callback: cbProc]]()
+    r.endpoints[httpMethod][url] = (name: name, callback: callback)
 
 proc match*(r: Router, url: string, httpMethod: string): int =
   discard
