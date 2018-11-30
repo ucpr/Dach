@@ -7,7 +7,8 @@ import tables
 import nre
 
 type 
-  cbProc = proc(): string
+  respObj* = tuple[content: string, headers: HttpHeaders]
+  cbProc = proc(): respObj
   Router* = ref object
     endpoints*: Table[string,
                   Table[string, tuple[name: string, callback: cbProc]]]
