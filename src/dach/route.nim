@@ -1,16 +1,11 @@
 import json
-import logging
 import asynchttpserver
 import asyncdispatch
 import sequtils
 import strutils
 import tables
 
-var L = newConsoleLogger()
-addHandler(L)
-
 type cbProc = proc(): string
-
 type 
   Router* = ref object
     endpoints*: Table[string,
