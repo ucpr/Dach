@@ -16,6 +16,31 @@ proc splitSlash(url: string): seq[string] =
   #[ split by slash ]#
   result = url.strip(chars={'/'}+Whitespace).split("/")
 
+proc matchUrlVars(rule, url: string): tuple[matchf: bool, params: Table[string, string]] =
+  #[
+    ruleに基づいてparamaterの値をurlから取得する
+  ]#
+  let 
+    rule = splitSlash(rule)
+    url = splitSlash(url)
+  if rule.len != url.len:
+    return (matchf: false, params: initTable[string, string]())
+
+  var params = initTable[string, string]()
+  for i in countup(0, rule.len - 1):
+    if rule[i].startsWith("{") and rule[i].endsWith("}"):
+      let
+        key = rule[i].strip(chars={'{', '}'})
+        value = url[i]
+      echo key, " : ", value
+      params[key] = value
+      continue
+    #if rule[i] != url[i]:
+      #echo rule[i], " ", url[i]
+      # TODO: 今はいったん空のTableを返す
+      #return (matchf: false, params: initTable[string, string]())
+  return (matchf: true, params: params)
+
 proc newRouter*(): Router =
   result = new(Router)
   result.endpoints = initTable[string,
