@@ -21,13 +21,17 @@ proc newRouter*(): Router =
                       Table[string, tuple[name: string, callback: cbProc]]]()
 
 proc addRule*(r: Router, url: string, httpMethod: string, name: string, callback: cbProc) =
+  #[
+    add rule to Router.
+    TODO: "/"のみの場合
+          "すでにaddRuleされてたときのexception"
+  ]#
   let
-    # TODO: '/' のみの場合
     url = url.strip().strip(chars={'/'}, leading=false)
     httpMethod = httpMethod.toUpperAscii()
   if not r.endpoints.hasKey(httpMethod):
     r.endpoints[httpMethod] = initTable[string, tuple[name: string, callback: cbProc]]()
-    r.endpoints[httpMethod][url] = (name: name, callback: callback)
+  r.endpoints[httpMethod][url] = (name: name, callback: callback)
 
 proc match*(r: Router, url: string, httpMethod: string): int =
   # return callback & var
