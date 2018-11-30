@@ -11,6 +11,10 @@ type
     endpoints*: Table[string,
                   Table[string, tuple[name: string, callback: cbProc]]]
 
+proc splitSlash(url: string): seq[string] =
+  #[ split by slash ]#
+  result = url.strip(chars={'/'}+Whitespace).split("/")
+
 proc newRouter*(): Router =
   result = new(Router)
   result.endpoints = initTable[string,
