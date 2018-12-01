@@ -8,7 +8,8 @@ import nre
 
 type 
   respObj* = tuple[content: string, headers: HttpHeaders]
-  cbProc = proc(): respObj
+  dachParams* = Table[string, string]
+  cbProc = proc(p: dachParams): respObj
   Router* = ref object
     endpoints*: Table[string,
                   Table[string, tuple[name: string, callback: cbProc]]]
@@ -17,7 +18,7 @@ proc splitSlash(url: string): seq[string] =
   #[ split by slash ]#
   result = url.strip(chars={'/'}+Whitespace).split("/")
 
-proc matchUrlVars(rule, url: string): tuple[matchf: bool, params: Table[string, string]] =
+proc matchUrlVars(rule, url: string): tuple[matchf: bool, params: dachParams] =
   #[
     ruleに基づいてparamaterの値をurlから取得する
   ]#
@@ -36,10 +37,10 @@ proc matchUrlVars(rule, url: string): tuple[matchf: bool, params: Table[string, 
       echo key, " : ", value
       params[key] = value
       continue
-    #if rule[i] != url[i]:
-      #echo rule[i], " ", url[i]
+    if rule[i] != url[i]:
+      echo rule[i], " ", url[i]
       # TODO: 今はいったん空のTableを返す
-      #return (matchf: false, params: initTable[string, string]())
+      return (matchf: false, params: initTable[string, string]())
   return (matchf: true, params: params)
 
 proc newRouter*(): Router =
@@ -60,7 +61,10 @@ proc addRule*(r: Router, url: string, httpMethod: string, name: string, callback
     r.endpoints[httpMethod] = initTable[string, tuple[name: string, callback: cbProc]]()
   r.endpoints[httpMethod][url] = (name: name, callback: callback)
 
-proc match*(r: Router, url: string, httpMethod: string): tuple[callback: cbProc, params: Table[string, string]] =
+proc notfound(p: dachParams): respObj =
+  return (content: "NOTFOUND", headers: newHttpHeaders())
+
+proc match*(r: Router, url: string, httpMethod: string): tuple[matchf: bool, callback: cbProc, params: dachParams] =
   #[ return callback & var ]#
   let
     url = url.strip().strip(chars={'/'}, leading=false)
@@ -71,5 +75,5 @@ proc match*(r: Router, url: string, httpMethod: string): tuple[callback: cbProc,
     if urlVars.matchf:
       let
         callback = r.endpoints[httpMethod][rule].callback
-      return (callback: callback, params: urlVars.params)
-  return (callback: nil, params: initTable[string, string]())
+      return (matchf: true, callback: callback, params: urlVars.params)
+  return (matchf: false, callback: nil, params: initTable[string, string]())
