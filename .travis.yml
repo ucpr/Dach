@@ -2,5 +2,5 @@ sudo: false
 language: c
 service:
   - docker
-before_install:
-  docker build -t Dach .
+script:
+  docker build -t dach .
