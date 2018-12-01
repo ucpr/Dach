@@ -13,10 +13,11 @@ proc run*(r: Router, p=Port(8080), address="") =
       mh = $req.reqMethod
       params = r.match(url, mh)
     if url != "./favicon.ico":
-      let ctx = params.callback()
+      if not params.matchf:
+        await req.respond(Http404, "NotFound")
+      let ctx = params.callback(params.params)
       if ctx.headers.len == 0:
         await req.respond(Http200, ctx.content)
       else:
         await req.respond(Http200, ctx.content, ctx.headers)
-
   waitFor server.serve(port=p, cb, address=address)
