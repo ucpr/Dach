@@ -1,6 +1,9 @@
 import json
 import httpcore
-import route
+
+type
+  CallBack = proc (): string
+  responseObj
 
 proc Response*(content: string, headers = newHttpHeaders()): respObj =
   result = (content: content, headers: headers)
