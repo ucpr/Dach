@@ -2,12 +2,15 @@ import json
 import httpcore
 
 type
-  CallBack = proc (): string
-  responseObj
+  Resp* = tuple[statuscode: HttpCode,
+              content: string,
+              headers: HttpHeaders]
+  CallBack* = proc (): Resp
 
-proc Response*(content: string, headers = newHttpHeaders()): respObj =
-  result = (content: content, headers: headers)
+proc Response*(content: string, statuscode = Http200, headers = newHttpHeaders()): Resp =
+  result = (statuscode: statuscode, content: content, headers: headers)
 
-proc JsonResponse*(jsonObj: JsonNode): respObj =
+proc JsonResponse*(content: JsonNode, statuscode = Http200): Resp =
   let headers = newHttpHeaders([("Content-Type", "application/json")])
-  result = (content: $jsonObj, headers: headers)
+  result = (statuscode: statuscode, content: $content, headers: headers)
+
