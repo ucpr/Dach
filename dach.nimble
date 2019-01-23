@@ -9,3 +9,6 @@ srcDir        = "src"
 # Dependencies
 
 requires "nim >= 0.18.0"
+
+when not defined(windows):
+  requires "httpbeast >= 0.2.0"
