@@ -16,6 +16,9 @@ type
 
 proc newConfigurator*(): Configrator =
   result = new Configrator
+  result.debug = DefaultDebug
+  result.port = DefaultPort
+  result.address = DefaultAddress
 
 proc loadConfigFile*(): Configrator =
   discard
