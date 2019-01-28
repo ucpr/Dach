@@ -10,6 +10,9 @@
 ---
 
 ## Description
+Dach is a tiny web application framework. This project started with SecHack365.  
+
+NOTE: This is still a dev version. 
 
 ## Requirement
 
@@ -27,9 +30,25 @@ $ nimble install
 $ docker pull nve3pd/dach
 ```
 
-## Usage
+## Example
 
-## Contributing
+This is a simple example
+
+```nim
+import dach
+
+var app = newDach()
+
+proc cb(): Resp =
+  Response("Hello World")
+
+app.addRoute("/", "index")
+app.addView("index", HttpGet, cb)
+
+app.run()
+```
+
+## Usage
 
 ## Author
 Taichi Uchihara (@u\_chi\_ha\_ra\_)
