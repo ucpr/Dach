@@ -32,3 +32,24 @@ proc hasKey(db: Session, key: string): bool =
     return false
   else:
     return true
+
+proc rawInsert(db: Session, key, value: string) =
+  let
+    key = dbQuote(key)
+    value = dbQuote(value)
+#  db.tryInsertId(sql"INSERT INTO session (l, val) VALUES (?, ?)", key, value)
+  db.exec(sql"INSERT INTO session (k, val) VALUES (?, ?)", key, value)
+
+proc update(db: Session, key, value: string) =
+  let
+    key = dbQuote(key)
+    value = dbQuote(value)
+  db.exec(sql"UPDATE session SET val=? WHERE k=?", value, key)
+
+proc `[]=`*(db: Session, key, value: string) =
+  ## Insert Key-Value in session. If key exists, update value.
+  if db.hasKey(key):
+    db.update(key, value)
+  else:
+    db.rawInsert(key, value)
+
