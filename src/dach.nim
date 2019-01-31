@@ -134,9 +134,10 @@ macro get*(n: varargs[untyped]): untyped =
     strBody.add(fmt"{repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
-proc cb(ctx: DachCtx): Resp =
-  {strBody}
-{repr(r)}.router.addRule({repr(rule)}, HttpGet, cb)
+block:
+  proc cb(ctx: DachCtx): Resp =
+    {strBody}
+  {repr(r)}.router.addRule({repr(rule)}, HttpGet, cb)
 """
   result = parseStmt(mainNode)
 
@@ -149,9 +150,10 @@ macro post*(n: varargs[untyped]): untyped =
     strBody.add(fmt"{repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
-proc cb(ctx: DachCtx): Resp =
-  {strBody}
-{repr(r)}.router.addRule({repr(rule)}, HttpPost, cb)
+block:
+  proc cb(ctx: DachCtx): Resp =
+    {strBody}
+  {repr(r)}.router.addRule({repr(rule)}, HttpPost, cb)
 """
   result = parseStmt(mainNode)
  
@@ -164,9 +166,10 @@ macro put*(n: varargs[untyped]): untyped =
     strBody.add(fmt"{repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
-proc cb(ctx: DachCtx): Resp =
-  {strBody}
-{repr(r)}.router.addRule({repr(rule)}, HttpPut, cb)
+block:
+  proc cb(ctx: DachCtx): Resp =
+    {strBody}
+  {repr(r)}.router.addRule({repr(rule)}, HttpPut, cb)
 """
   result = parseStmt(mainNode)
  
@@ -179,9 +182,10 @@ macro head*(n: varargs[untyped]): untyped =
     strBody.add(fmt"{repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
-proc cb(ctx: DachCtx): Resp =
-  {strBody}
-{repr(r)}.router.addRule({repr(rule)}, HttpHead, cb)
+block:
+  proc cb(ctx: DachCtx): Resp =
+    {strBody}
+  {repr(r)}.router.addRule({repr(rule)}, HttpHead, cb)
 """
   result = parseStmt(mainNode)
  
@@ -194,9 +198,10 @@ macro deleate*(n: varargs[untyped]): untyped =
     strBody.add(fmt"{repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
-proc cb(ctx: DachCtx): Resp =
-  {strBody}
-{repr(r)}.router.addRule({repr(rule)}, HttpDeleate, cb)
+block:
+  proc cb(ctx: DachCtx): Resp =
+    {strBody}
+  {repr(r)}.router.addRule({repr(rule)}, HttpDeleate, cb)
 """
   result = parseStmt(mainNode)
  
@@ -209,9 +214,10 @@ macro options*(n: varargs[untyped]): untyped =
     strBody.add(fmt"{repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
-proc cb(ctx: DachCtx): Resp =
-  {strBody}
-{repr(r)}.router.addRule({repr(rule)}, HttpOptions, cb)
+block:
+  proc cb(ctx: DachCtx): Resp =
+    {strBody}
+  {repr(r)}.router.addRule({repr(rule)}, HttpOptions, cb)
 """
   result = parseStmt(mainNode)
  
