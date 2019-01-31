@@ -39,8 +39,8 @@ import dach
 
 var app = newDach()
 
-proc cb(): Resp =
-  Response("Hello World")
+proc cb(ctx: DachCtx): Resp =
+  ctx.response("Hello World")
 
 app.addRoute("/", "index")
 app.addView("index", HttpGet, cb)
