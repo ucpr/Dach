@@ -1,3 +1,21 @@
+## Dach is tiny web application framework. This project started with SecHack365.
+##
+## Example
+## -------
+## This example will create an Dach application on 127.0.0.1:8080
+##
+## .. code-block::nim
+##    import dach
+##    var app = newDach()
+##    
+##    proc cb(ctx: DachCtx): Resp =
+##       ctx.response("Hello World")
+##    
+##    app.addRoute("/", "index")
+##    app.addView("index", HttpGet, cb)
+##
+##    app.run()
+##
 
 import asyncdispatch, asynchttpserver, httpcore
 import strformat,  strutils
@@ -19,6 +37,7 @@ type
     routeNames: Table[string, string]
 
 proc newDach*(): Dach =
+  ## Create a new Dach instance
   result = new Dach
 
   result.router = newRouter()
@@ -26,9 +45,23 @@ proc newDach*(): Dach =
   result.routeNames = initTable[string, string]()
 
 proc addRoute*(r: var Dach, rule, name: string) =
+  ## Add route and route name
   r.routeNames[name] = rule
 
 proc addView*(r: var Dach, name: string, hm: HttpMethod, cb: CallBack) =
+  ## Add CallBack based on route name
+  ##
+  ## .. code-block::nim
+  ##    import dach
+  ##    var app = newDach()
+  ##    
+  ##    proc cb(ctx: DachCtx): Resp =
+  ##       ctx.response("Hello World")
+  ##    
+  ##    app.addRoute("/", "index")
+  ##    app.addView("index", HttpGet, cb)
+  ##
+  ##    app.run()
   if not r.routeNames.hasKey(name):
     return
     # raise exception
@@ -47,6 +80,7 @@ proc parseQuery(s: string): Table[string, string] =
       result[param[0]] = param[1]
 
 proc run*(r: Dach) =
+  ## running Dach application.
   let
     server = newAsyncHttpServer()
     port = r.config.port
