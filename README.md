@@ -16,7 +16,7 @@ NOTE: This is still a dev version.
 
 ## Requirement
 
-- Nim 0.18.0 over
+- Nim >= 0.18.0
 
 ## Install
 
@@ -45,6 +45,18 @@ proc cb(): Resp =
 app.addRoute("/", "index")
 app.addView("index", HttpGet, cb)
 
+app.run()
+```
+
+or 
+
+```nim
+import dach
+var app = newDach()
+      
+app.get "/":
+  ctx.response("Hello World")
+      
 app.run()
 ```
 
