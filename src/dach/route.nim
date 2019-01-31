@@ -2,6 +2,8 @@ import tables
 import strutils
 import httpcore
 
+import times
+
 import critbittree, response
 
 type 
@@ -48,3 +50,39 @@ proc hasRule*(r: Router, rule: string, hm: HttpMethod): bool =
 
 proc get*(r: Router, rule: string, hm: HttpMethod): CallBack =
   result = r[rule].callbacks[hm]
+
+if isMainModule:
+  let l = @[
+    "/",
+    "/user",
+    "/user/profile",
+    "/user/ac",
+    "/user/account",
+    "/user/char",
+    "/user/hoge",
+    "/ascii/hoge",
+    "/ascii/name",
+    "/namespace",
+    "/lang",
+    "/lang/java",
+    "/lang/javascript",
+    "/lang/python",
+    "/lang/ruby",
+    "/lang/nim"
+    ]
+  var r = newRouter()
+
+  proc cb(ctx: DachCtx): Resp =
+    ctx.response("Hello World")
+
+  let old = cpuTime()
+
+  for p in l:
+    r.addRule(p, HttpGet, cb)
+  echo "routing time: ", cpuTime() - old
+
+  for p in l:
+    discard r.hasRule(p, HttpGet)
+
+  echo "hasRule time: ", cpuTime() - old
+
