@@ -16,17 +16,28 @@ type
     cookie*: Cookie
     query*: Table[string, string]
 
-proc Response*(content: string, statuscode = Http200, headers = newHttpHeaders()): Resp =
-  result = (statuscode: statuscode, content: content, headers: headers)
   CallBack* = proc (ctx: DachCtx): Resp
 
-proc JsonResponse*(content: string, statuscode = Http200): Resp =
+proc newDachCtx*(): DachCtx =
+  ## Create a new DachCtx instance.
+  result = new DachCtx
+  result.statuscode = Http200
+  result.headers = newhttpheaders()
+
+proc response*(ctx: DachCtx, content: string): Resp =
+  let header = ctx.headers
+  if ctx.cookie.len != 0:
+    header["Set-Cookie"] = concat(ctx.cookie)
+  result = (statuscode: ctx.statuscode, content: content, headers: ctx.headers)
+
+proc jsonResponse*(ctx: DachCtx, content: JsonNode): Resp =
+  let header = ctx.headers
+  if ctx.cookie.len != 0:
+    header["Set-Cookie"] = concat(ctx.cookie)
+  header["Content-Type"] = "application/json"
+  result = (statuscode: ctx.statuscode, content: $content, headers: header)
+
+proc jsonResponse*(ctx: DachCtx, content: string): Resp =
   let jsonNode = parseJson(content)
-  let headers = newhttpheaders([("content-type", "application/json")])
-  result = (statuscode: statuscode, content: $content, headers: headers)
-
-proc JsonResponse*(content: JsonNode, statuscode = Http200): Resp =
-  let headers = newhttpheaders([("content-type", "application/json")])
-  result = (statuscode: statuscode, content: $content, headers: headers)
-
+  result = ctx.jsonResponse(jsonNode)
 
