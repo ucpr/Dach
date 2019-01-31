@@ -25,3 +25,10 @@ proc rawGet(db: Session, key: string): string =
 proc `[]`*(db: Session, key: string): string =
   ## Get value from session storage
   db.rawGet(key)
+
+proc hasKey(db: Session, key: string): bool =
+  # TODO: Fix
+  if db.rawGet(key) == "":
+    return false
+  else:
+    return true
