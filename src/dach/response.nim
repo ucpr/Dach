@@ -1,6 +1,7 @@
 import json
 import tables
 import httpcore
+import strutils
 
 import cookie
 
@@ -41,3 +42,9 @@ proc jsonResponse*(ctx: DachCtx, content: string): Resp =
   let jsonNode = parseJson(content)
   result = ctx.jsonResponse(jsonNode)
 
+proc redirect*(path: string): Resp =
+  var header = newhttpheaders()
+  header["Location"] = path
+  result = (statuscode: Http303,
+            content: "Redirecting to <a href=\"$1\">$1</a>" % [path],
+            headers: header)
