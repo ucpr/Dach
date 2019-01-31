@@ -33,16 +33,20 @@ export route except get
 type
   Dach* = ref object
     router: Router
-    config: Configrator
+    config: Configurator
     routeNames: Table[string, string]
 
-proc newDach*(): Dach =
+proc newDach*(filename: string = ""): Dach =
   ## Create a new Dach instance
   result = new Dach
 
   result.router = newRouter()
-  result.config = newConfigurator()
   result.routeNames = initTable[string, string]()
+
+  if filename == "":
+    result.config = newConfigurator()
+  else:
+    result.config = loadConfigFile(filename)
 
 proc addRoute*(r: var Dach, rule, name: string) =
   ## Add route and route name
@@ -111,3 +115,103 @@ proc run*(r: Dach) =
   waitFor server.serve(port=Port(port), handler, address=address)
 #  httpbeast.run(handler, settings)
 
+macro get*(n: varargs[untyped]): untyped =
+  ## Add rule to router
+  ##
+  ## .. code-block::nim
+  ##    import dach
+  ##    var app = newDach()
+  ##    
+  ##    app.get "/":
+  ##      ctx.response("Hello World")
+  ##    
+  ##    app.run()
+  var strBody: string
+  let
+    r = n[0]
+    rule = n[1]
+  for i in n[2]:
+    strBody.add(fmt"{repr(i)}" & "\n")
+
+  var mainNode: string = fmt"""
+proc cb(ctx: DachCtx): Resp =
+  {strBody}
+{repr(r)}.router.addRule({repr(rule)}, HttpGet, cb)
+"""
+  result = parseStmt(mainNode)
+
+macro post*(n: varargs[untyped]): untyped =
+  var strBody: string
+  let
+    r = n[0]
+    rule = n[1]
+  for i in n[2]:
+    strBody.add(fmt"{repr(i)}" & "\n")
+
+  var mainNode: string = fmt"""
+proc cb(ctx: DachCtx): Resp =
+  {strBody}
+{repr(r)}.router.addRule({repr(rule)}, HttpPost, cb)
+"""
+  result = parseStmt(mainNode)
+ 
+macro put*(n: varargs[untyped]): untyped =
+  var strBody: string
+  let
+    r = n[0]
+    rule = n[1]
+  for i in n[2]:
+    strBody.add(fmt"{repr(i)}" & "\n")
+
+  var mainNode: string = fmt"""
+proc cb(ctx: DachCtx): Resp =
+  {strBody}
+{repr(r)}.router.addRule({repr(rule)}, HttpPut, cb)
+"""
+  result = parseStmt(mainNode)
+ 
+macro head*(n: varargs[untyped]): untyped =
+  var strBody: string
+  let
+    r = n[0]
+    rule = n[1]
+  for i in n[2]:
+    strBody.add(fmt"{repr(i)}" & "\n")
+
+  var mainNode: string = fmt"""
+proc cb(ctx: DachCtx): Resp =
+  {strBody}
+{repr(r)}.router.addRule({repr(rule)}, HttpHead, cb)
+"""
+  result = parseStmt(mainNode)
+ 
+macro deleate*(n: varargs[untyped]): untyped =
+  var strBody: string
+  let
+    r = n[0]
+    rule = n[1]
+  for i in n[2]:
+    strBody.add(fmt"{repr(i)}" & "\n")
+
+  var mainNode: string = fmt"""
+proc cb(ctx: DachCtx): Resp =
+  {strBody}
+{repr(r)}.router.addRule({repr(rule)}, HttpDeleate, cb)
+"""
+  result = parseStmt(mainNode)
+ 
+macro options*(n: varargs[untyped]): untyped =
+  var strBody: string
+  let
+    r = n[0]
+    rule = n[1]
+  for i in n[2]:
+    strBody.add(fmt"{repr(i)}" & "\n")
+
+  var mainNode: string = fmt"""
+proc cb(ctx: DachCtx): Resp =
+  {strBody}
+{repr(r)}.router.addRule({repr(rule)}, HttpOptions, cb)
+"""
+  result = parseStmt(mainNode)
+ 
