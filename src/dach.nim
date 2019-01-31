@@ -1,13 +1,17 @@
 import asyncdispatch
+import asynchttpserver
 import tables
 import strformat
+import strutils
 import httpcore
+import macros
 
-import httpbeast except run, Settings
-import options
+#import httpbeast except run, Settings
+#import options
 
-import dach/[route, response, configrator, logger]
-export route, response, httpcore
+import dach/[route, response, configrator, logger, cookie]
+export response, httpcore, cookie
+export route except get
 
 type
   Dach* = ref object
@@ -30,37 +34,47 @@ proc addView*(r: var Dach, name: string, hm: HttpMethod, cb: CallBack) =
     return
     # raise exception
   let rule = r.routeNames[name]
-  r.router.addRule(rule, hm, cb)
+
+  if not r.router.hasRule(rule, hm):
+    r.router.addRule(rule, hm, cb)
+  else:
+    return  ## Future: raise Exception
+
+proc parseQuery(s: string): Table[string, string] =
+  result = initTable[string, string]()
+  if s != "":
+    for query in s.split("?"):
+      let param = query.split("=")
+      result[param[0]] = param[1]
 
 proc run*(r: Dach) =
   let
-#    server = newAsyncHttpServer()
+    server = newAsyncHttpServer()
     port = r.config.port
     address = r.config.address
-    settings = initSettings(Port(8080), address)
 
-  #if r.config.debug == true:
-  dachConsoleLogger()
+  if r.config.debug == true:
+    dachConsoleLogger()
 
-  proc handler(req: Request): Future[void] =
+  proc handler(req: Request) {.async.} =
     let
-      url = req.path.get()
-      hm = req.httpMethod.get()
-#      query = req.url.query
-#      protocol = req.protocol.orig
+      url = req.url.path
+      hm = req.reqMethod
+      query = parseQuery(req.url.query)
 
     if r.router.hasRule(url, hm):
+      var ctx = newDachCtx()
+      ctx.query = query
       let 
-        resp = r.router.get(url, hm)()
+        resp = r.router.get(url, hm)(ctx)
         statucode = resp.statuscode
       info(fmt"{$hm} {url} {statucode}")
-      req.send(resp.statuscode, resp.content, $resp.headers)
-      #info(fmt"{}")
+      await req.respond(resp.statuscode, resp.content, resp.headers)
     else:
       info(fmt"{$hm} {url} {$Http404}")
-      req.send(Http404, "Not Found")
+      await req.respond(Http404, "Not Found")
 
-  echo fmt"Running on {address}:{port}"
-
-  httpbeast.run(handler, settings)
+  echo fmt"Running on localhost:8080"
+  waitFor server.serve(port=Port(port), handler, address=address)
+#  httpbeast.run(handler, settings)
 
