@@ -18,11 +18,11 @@
 ##
 
 import asyncdispatch, asynchttpserver, httpcore
-import strformat,  strutils
+import strformat, strutils
 import tables
 import macros
 
-import dach/[route, response, configrator, logger, cookie]
+import dach/[route, response, configrator, logger, cookie, session]
 
 #include dach/cookie
 #include dach/response
@@ -35,6 +35,7 @@ type
     router: Router
     config: Configurator
     routeNames: Table[string, string]
+    session*: Session
 
 proc newDach*(filename: string = ""): Dach =
   ## Create a new Dach instance
@@ -47,6 +48,14 @@ proc newDach*(filename: string = ""): Dach =
     result.config = newConfigurator()
   else:
     result.config = loadConfigFile(filename)
+
+  if result.config.isUseSession:
+    let
+      con = result.config.sessionConnection
+      user = result.config.sessionServerUser
+      pass = result.config.sessionServerPassword
+      database = result.config.sessionServerDatabase
+    result.session = newSession(con, user, pass, database)
 
 proc addRoute*(r: var Dach, rule, name: string) =
   ## Add route and route name
@@ -115,7 +124,7 @@ proc run*(r: Dach) =
   waitFor server.serve(port=Port(port), handler, address=address)
 #  httpbeast.run(handler, settings)
 
-macro get*(n: varargs[untyped]): untyped =
+macro get*(head, path, body: untyped): untyped =
   ## Add rule to router
   ##
   ## .. code-block::nim
@@ -127,97 +136,78 @@ macro get*(n: varargs[untyped]): untyped =
   ##    
   ##    app.run()
   var strBody: string
-  let
-    r = n[0]
-    rule = n[1]
-  for i in n[2]:
-    strBody.add(fmt"{repr(i)}" & "\n")
+  for i in body:
+    strBody.add(fmt"    {repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
 block:
   proc cb(ctx: DachCtx): Resp =
-    {strBody}
-  {repr(r)}.router.addRule({repr(rule)}, HttpGet, cb)
-"""
+{strBody}
+  {repr(head)}.router.addRule(""{repr(path)}"", HttpGet, cb)"""
   result = parseStmt(mainNode)
 
-macro post*(n: varargs[untyped]): untyped =
+macro post*(head, path, body: untyped): untyped =
+  ## Add rule to router
   var strBody: string
-  let
-    r = n[0]
-    rule = n[1]
-  for i in n[2]:
-    strBody.add(fmt"{repr(i)}" & "\n")
+  for i in body:
+    strBody.add(fmt"    {repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
 block:
   proc cb(ctx: DachCtx): Resp =
-    {strBody}
-  {repr(r)}.router.addRule({repr(rule)}, HttpPost, cb)
-"""
+{strBody}
+  {repr(head)}.router.addRule(""{repr(path)}"", HttpPost, cb)"""
   result = parseStmt(mainNode)
- 
-macro put*(n: varargs[untyped]): untyped =
+
+macro put*(head, path, body: untyped): untyped =
+  ## Add rule to router
   var strBody: string
-  let
-    r = n[0]
-    rule = n[1]
-  for i in n[2]:
-    strBody.add(fmt"{repr(i)}" & "\n")
+  for i in body:
+    strBody.add(fmt"    {repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
 block:
   proc cb(ctx: DachCtx): Resp =
-    {strBody}
-  {repr(r)}.router.addRule({repr(rule)}, HttpPut, cb)
-"""
+{strBody}
+  {repr(head)}.router.addRule(""{repr(path)}"", HttpPut, cb)"""
   result = parseStmt(mainNode)
- 
-macro head*(n: varargs[untyped]): untyped =
+
+macro head*(head, path, body: untyped): untyped =
+  ## Add rule to router
   var strBody: string
-  let
-    r = n[0]
-    rule = n[1]
-  for i in n[2]:
-    strBody.add(fmt"{repr(i)}" & "\n")
+  for i in body:
+    strBody.add(fmt"    {repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
 block:
   proc cb(ctx: DachCtx): Resp =
-    {strBody}
-  {repr(r)}.router.addRule({repr(rule)}, HttpHead, cb)
-"""
+{strBody}
+  {repr(head)}.router.addRule(""{repr(path)}"", HttpHead, cb)"""
   result = parseStmt(mainNode)
- 
-macro deleate*(n: varargs[untyped]): untyped =
+
+macro delete*(head, path, body: untyped): untyped =
+  ## Add rule to router
   var strBody: string
-  let
-    r = n[0]
-    rule = n[1]
-  for i in n[2]:
-    strBody.add(fmt"{repr(i)}" & "\n")
+  for i in body:
+    strBody.add(fmt"    {repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
 block:
   proc cb(ctx: DachCtx): Resp =
-    {strBody}
-  {repr(r)}.router.addRule({repr(rule)}, HttpDeleate, cb)
-"""
+{strBody}
+  {repr(head)}.router.addRule(""{repr(path)}"", HttpDelete, cb)"""
   result = parseStmt(mainNode)
- 
-macro options*(n: varargs[untyped]): untyped =
+
+macro options*(head, path, body: untyped): untyped =
+  ## Add rule to router
   var strBody: string
-  let
-    r = n[0]
-    rule = n[1]
-  for i in n[2]:
-    strBody.add(fmt"{repr(i)}" & "\n")
+  for i in body:
+    strBody.add(fmt"    {repr(i)}" & "\n")
 
   var mainNode: string = fmt"""
 block:
   proc cb(ctx: DachCtx): Resp =
-    {strBody}
-  {repr(r)}.router.addRule({repr(rule)}, HttpOptions, cb)
-"""
+{strBody}
+  {repr(head)}.router.addRule(""{repr(path)}"", HttpOptions, cb)"""
   result = parseStmt(mainNode)
- 
+
