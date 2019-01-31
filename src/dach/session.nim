@@ -53,3 +53,7 @@ proc `[]=`*(db: Session, key, value: string) =
   else:
     db.rawInsert(key, value)
 
+proc del*(db: Session, key: string) =
+  ## Delete Key-Value from session
+  db.exec(sql"DELETE FROM session WHERE k=?", key)
+
