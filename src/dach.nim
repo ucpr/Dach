@@ -21,13 +21,15 @@ import asyncdispatch, asynchttpserver, httpcore
 import strformat, strutils
 import tables
 import macros
+import db_mysql
 
 import dach/[route, response, configrator, logger, cookie, session]
 
 #include dach/cookie
 #include dach/response
 
-export cookie, response, httpcore
+export cookie, response, httpcore, session
+export tables
 export route except get
 
 type
@@ -35,7 +37,7 @@ type
     router: Router
     config: Configurator
     routeNames: Table[string, string]
-    session*: Session
+    session*: Dbconn
 
 proc newDach*(filename: string = ""): Dach =
   ## Create a new Dach instance
@@ -85,10 +87,10 @@ proc addView*(r: var Dach, name: string, hm: HttpMethod, cb: CallBack) =
   else:
     return  ## Future: raise Exception
 
-proc parseQuery(s: string): Table[string, string] =
+proc parseBodyQuery(s: string): Table[string, string] =
   result = initTable[string, string]()
   if s != "":
-    for query in s.split("?"):
+    for query in s.split("&"):
       let param = query.split("=")
       result[param[0]] = param[1]
 
@@ -106,11 +108,11 @@ proc run*(r: Dach) =
     let
       url = req.url.path
       hm = req.reqMethod
-      query = parseQuery(req.url.query)
+      form = parseBodyQuery(req.body)
 
     if r.router.hasRule(url, hm):
       var ctx = newDachCtx()
-      ctx.query = query
+      ctx.form = form
       let 
         resp = r.router.get(url, hm)(ctx)
         statucode = resp.statuscode
