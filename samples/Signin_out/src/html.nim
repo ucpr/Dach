@@ -11,7 +11,7 @@ body,html{height:100%}body{display:-ms-flexbox;display:flex;-ms-flex-align:cente
 let indexContent* = "<!DOCTYPE html>" & html(
   head(
     meta(charset="utf-8"),
-    title("ToDo List"),
+    title("sample"),
     link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"),
     style(customCSS),
   ),
@@ -24,6 +24,23 @@ let indexContent* = "<!DOCTYPE html>" & html(
       label(`for`="inputPassword", class="sr-only", "Password"),
       input(`type`="password", name="password", id="inputPassword", class="form-control", placeholder="Password"),
       button(class="btn btn-lg btn-primary btn-block", `type`="submit", "Sign in"),
+      a(href="/register", "Regist"),
+      p(class="mt-5 mb-3 text-muted", "&copy; 2019"),
+    )
+  )
+)
+
+let loggedInContent* = "<!DOCTYPE html>" & html(
+  head(
+    meta(charset="utf-8"),
+    title("sample"),
+    link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"),
+    style(customCSS),
+  ),
+  body(class="text-center",
+    form(class="form-signin", action="/logout", `method`="post",
+      h1("This is ログイン後のページです。"),
+      button(class="btn btn-lg btn-primary btn-block", `type`="submit", "Logout"),
       p(class="mt-5 mb-3 text-muted", "&copy; 2019"),
     )
   )
@@ -32,7 +49,7 @@ let indexContent* = "<!DOCTYPE html>" & html(
 let registContent* = "<!DOCTYPE html>" & html(
   head(
     meta(charset="utf-8"),
-    title("ToDo List"),
+    title("sample"),
     link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"),
     style(customCSS),
   ),
@@ -45,6 +62,7 @@ let registContent* = "<!DOCTYPE html>" & html(
       label(`for`="inputPassword", class="sr-only", "Password"),
       input(`type`="password", name="password", id="inputPassword", class="form-control", placeholder="Password"),
       button(class="btn btn-lg btn-primary btn-block", `type`="submit", "regist!"),
+      a(href="/", "Login"),
       p(class="mt-5 mb-3 text-muted", "&copy; 2019"),
     )
   )
