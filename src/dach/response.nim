@@ -16,6 +16,7 @@ type
     headers*: HttpHeaders
     cookie*: Cookie
     query*: Table[string, string]
+    form*: Table[string, string]
 
   CallBack* = proc (ctx: DachCtx): Resp
 
