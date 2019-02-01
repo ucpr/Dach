@@ -113,6 +113,7 @@ proc run*(r: Dach) =
     if r.router.hasRule(url, hm):
       var ctx = newDachCtx()
       ctx.form = form
+      ctx.req = req
       let 
         resp = r.router.get(url, hm)(ctx)
         statucode = resp.statuscode
