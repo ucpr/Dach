@@ -2,6 +2,7 @@ import json
 import tables
 import httpcore
 import strutils
+import asyncHttpServer
 
 import cookie
 
@@ -17,6 +18,7 @@ type
     cookie*: Cookie
     query*: Table[string, string]
     form*: Table[string, string]
+    req*: Request
 
   CallBack* = proc (ctx: DachCtx): Resp
 
