@@ -18,9 +18,9 @@ type
 #  CallBack = proc(): string
 #  Parameters = Table[string, string]
 
-  Items = object
+  Items = ref object
     rule: string
-    hm: HttpMethod
+#    hm: HttpMethod
     callbacks: Table[HttpMethod, CallBack]
   #paramIndices: array 
 
@@ -31,16 +31,14 @@ proc newRouter*(): Router =
   return router
 
 proc addRule*(r: var Router, rule: string, hm: HttpMethod, callback: CallBack) =
-  var item: Items
-
   if not r.hasKey(rule):
+    var item = new Items
     item.callbacks = initTable[HttpMethod, CallBack]()
-
-  item.rule = rule
-  item.hm = hm
-  item.callbacks[hm] = callback
-
-  r[rule] = item
+    item.rule = rule
+    item.callbacks[hm] = callback
+    r[rule] = item
+  else:
+    r[rule].callbacks[hm] = callback
 
 proc hasRule*(r: Router, rule: string, hm: HttpMethod): bool =
   if (not r.hasKey(rule)) or (not r[rule].callbacks.hasKey(hm)):
