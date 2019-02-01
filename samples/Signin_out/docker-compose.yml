@@ -1,0 +1,27 @@
+version: '3.3'
+services:
+  db:
+    build: ./docker/session_db/
+    image: mysql5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: dach_sample
+      MYSQL_USER: dach
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3314:3306"
+    volumes:
+      - ./docker/session_db/mysql/initdb.d:/docker-entrypoint-initdb.d
+      - ./docker/session_db/mysql/conf.d:/etc/mysql/conf.d
+      - ./log/mysql:/var/log/mysql
+
+        #  app:
+        #    build: ./
+        #    image: nimlang/nim:0.19.0
+        #    ports:
+        #      - "8080:8080"
+        #    volumes:
+        #      - ./src:/testApp
+        #    depends_on:
+        #      - db

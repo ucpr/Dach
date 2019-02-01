@@ -1,75 +1,86 @@
-import json
-import asynchttpserver
-import asyncdispatch
-import sequtils
-import strutils
 import tables
-import nre
+import strutils
+import httpcore
+
+import times
+
+import critbittree, response
 
 type 
-  respObj* = tuple[content: string, headers: HttpHeaders]
-  cbProc = proc(): respObj
-  Router* = ref object
-    endpoints*: Table[string,
-                  Table[string, tuple[name: string, callback: cbProc]]]
+#  HttpMethod* = enum
+#    GET = "GET"
+#    POST = "PUT"
+#    PUT = "PUT"
+#    HEAD = "HEAD"
+#    DELEATE = "DELEATE"
+#    OPTIONS = "OPTIONS"
 
-proc splitSlash(url: string): seq[string] =
-  #[ split by slash ]#
-  result = url.strip(chars={'/'}+Whitespace).split("/")
+#  CallBack = proc(): string
+#  Parameters = Table[string, string]
 
-proc matchUrlVars(rule, url: string): tuple[matchf: bool, params: Table[string, string]] =
-  #[
-    ruleに基づいてparamaterの値をurlから取得する
-  ]#
-  let 
-    rule = splitSlash(rule)
-    url = splitSlash(url)
-  if rule.len != url.len:
-    return (matchf: false, params: initTable[string, string]())
+  Items = ref object
+    rule: string
+#    hm: HttpMethod
+    callbacks: Table[HttpMethod, CallBack]
+  #paramIndices: array 
 
-  var params = initTable[string, string]()
-  for i in countup(0, rule.len - 1):
-    if rule[i].startsWith("{") and rule[i].endsWith("}"):
-      let
-        key = rule[i].strip(chars={'{', '}'})
-        value = url[i]
-      echo key, " : ", value
-      params[key] = value
-      continue
-    #if rule[i] != url[i]:
-      #echo rule[i], " ", url[i]
-      # TODO: 今はいったん空のTableを返す
-      #return (matchf: false, params: initTable[string, string]())
-  return (matchf: true, params: params)
+  Router* = CritBitTree[Items]
 
 proc newRouter*(): Router =
-  result = new(Router)
-  result.endpoints = initTable[string,
-                      Table[string, tuple[name: string, callback: cbProc]]]()
+  var router: CritBitTree[Items]
+  return router
 
-proc addRule*(r: Router, url: string, httpMethod: string, name: string, callback: cbProc) =
-  #[
-    add rule to Router.
-    TODO: "/"のみの場合
-          "すでにaddRuleされてたときのexception"
-  ]#
-  let
-    url = url.strip().strip(chars={'/'}, leading=false)
-    httpMethod = httpMethod.toUpperAscii()
-  if not r.endpoints.hasKey(httpMethod):
-    r.endpoints[httpMethod] = initTable[string, tuple[name: string, callback: cbProc]]()
-  r.endpoints[httpMethod][url] = (name: name, callback: callback)
+proc addRule*(r: var Router, rule: string, hm: HttpMethod, callback: CallBack) =
+  if not r.hasKey(rule):
+    var item = new Items
+    item.callbacks = initTable[HttpMethod, CallBack]()
+    item.rule = rule
+    item.callbacks[hm] = callback
+    r[rule] = item
+  else:
+    r[rule].callbacks[hm] = callback
 
-proc match*(r: Router, url: string, httpMethod: string): tuple[callback: cbProc, params: Table[string, string]] =
-  #[ return callback & var ]#
-  let
-    url = url.strip().strip(chars={'/'}, leading=false)
-#  if not r.endpoints.hasKey(httpMethod):
-#    return nil
-  for rule in r.endpoints[httpMethod].keys():
-    var urlVars = matchUrlVars(rule, url)
-    if urlVars.matchf:
-      let
-        callback = r.endpoints[httpMethod][rule].callback
-      return (callback: callback, params: urlVars.params)
-  return (callback: nil, params: initTable[string, string]())
+proc hasRule*(r: Router, rule: string, hm: HttpMethod): bool =
+  if (not r.hasKey(rule)) or (not r[rule].callbacks.hasKey(hm)):
+    return false
+  else:
+    return true
+
+proc get*(r: Router, rule: string, hm: HttpMethod): CallBack =
+  result = r[rule].callbacks[hm]
+
+if isMainModule:
+  let l = @[
+    "/",
+    "/user",
+    "/user/profile",
+    "/user/ac",
+    "/user/account",
+    "/user/char",
+    "/user/hoge",
+    "/ascii/hoge",
+    "/ascii/name",
+    "/namespace",
+    "/lang",
+    "/lang/java",
+    "/lang/javascript",
+    "/lang/python",
+    "/lang/ruby",
+    "/lang/nim"
+    ]
+  var r = newRouter()
+
+  proc cb(ctx: DachCtx): Resp =
+    ctx.response("Hello World")
+
+  let old = cpuTime()
+
+  for p in l:
+    r.addRule(p, HttpGet, cb)
+  echo "routing time: ", cpuTime() - old
+
+  for p in l:
+    discard r.hasRule(p, HttpGet)
+
+  echo "hasRule time: ", cpuTime() - old
+
