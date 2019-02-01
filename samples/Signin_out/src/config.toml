@@ -1,0 +1,26 @@
+#
+# ██████╗  █████╗  ██████╗██╗  ██╗     ██████╗ ██████╗ ███╗   ██╗███████╗██╗ ██████╗ 
+# ██╔══██╗██╔══██╗██╔════╝██║  ██║    ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝ 
+# ██║  ██║███████║██║     ███████║    ██║     ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
+# ██║  ██║██╔══██║██║     ██╔══██║    ██║     ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
+# ██████╔╝██║  ██║╚██████╗██║  ██║    ╚██████╗╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
+# ╚═════╝ ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝     ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝ 
+#
+#  This is the template of the Dach application configuration file.
+
+[Application]
+debug = true  # boolean, true or false
+port = 8080  # Integer
+address = "127.0.0.1"  # String
+
+[Session]
+isSession = false
+address = "127.0.0.1"  # String
+port = 3314  # Integer
+user = "root"  # String
+password = "root"  # String
+database = "dach_sample"  # String, Database name
+
+secret_key = ""
+
+##
