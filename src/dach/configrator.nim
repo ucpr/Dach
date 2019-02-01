@@ -17,12 +17,12 @@ type
     case isUseSession*: bool:
       of true:
         # db_mysql.open
-        sessionConnection: string  # 127.0.0.1:3314
-        sessionServerUser: string
-        sessionServerPassword: string
-        sessionServerDatabase: string
+        sessionConnection*: string  # 127.0.0.1:3314
+        sessionServerUser*: string
+        sessionServerPassword*: string
+        sessionServerDatabase*: string
 
-        secretKey: string
+        secretKey*: string
       of false:
         discard
 
