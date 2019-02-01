@@ -61,6 +61,7 @@ app.run()
 ```
 
 ## Usage
+Please reading [dach.html](https://nve3pd.github.io/Dach/doc/dach.html)
 
 ## Author
 Taichi Uchihara (@u\_chi\_ha\_ra\_)
