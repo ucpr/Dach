@@ -29,13 +29,13 @@ proc newDachCtx*(): DachCtx =
   result.headers = newhttpheaders()
 
 proc response*(ctx: DachCtx, content: string): Resp =
-  let header = ctx.headers
+  var header = ctx.headers
   if ctx.cookie.len != 0:
     header["Set-Cookie"] = concat(ctx.cookie)
   result = (statuscode: ctx.statuscode, content: content, headers: ctx.headers)
 
 proc jsonResponse*(ctx: DachCtx, content: JsonNode): Resp =
-  let header = ctx.headers
+  var header = ctx.headers
   if ctx.cookie.len != 0:
     header["Set-Cookie"] = concat(ctx.cookie)
   header["Content-Type"] = "application/json"
@@ -45,8 +45,8 @@ proc jsonResponse*(ctx: DachCtx, content: string): Resp =
   let jsonNode = parseJson(content)
   result = ctx.jsonResponse(jsonNode)
 
-proc redirect*(path: string): Resp =
-  var header = newhttpheaders()
+proc redirect*(ctx: DachCtx, path: string): Resp =
+  var header = ctx.headers
   header["Location"] = path
   result = (statuscode: Http303,
             content: "Redirecting to <a href=\"$1\">$1</a>" % [path],
