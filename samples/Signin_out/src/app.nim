@@ -63,7 +63,7 @@ proc loggedInPage(ctx: DachCtx): Resp =
   if checkSession(ctx.req):
     ctx.response(loggedInContent)
   else:
-    redirect("/")
+    ctx.redirect("/")
 
 proc regist(ctx: DachCtx): Resp =  # post
   let
@@ -74,9 +74,9 @@ proc regist(ctx: DachCtx): Resp =  # post
   if existsUser == "":  # userが登録されてない場合
     register(username, password)
     ctx.cookie["username"] = username
-    return redirect("/logged_in")  ## ここはlogin後のページ
+    return ctx.redirect("/logged_in")  ## ここはlogin後のページ
   else:  # 登録されていたらindexにredirect
-    return redirect("/")  ## loginページ
+    return ctx.redirect("/")  ## loginページ
 
 proc login(ctx: DachCtx): Resp =  # post
 #  debugDBprint()
@@ -89,26 +89,26 @@ proc login(ctx: DachCtx): Resp =  # post
   if digitPass == "":  
     # userが登録されてない場合は register にredirect
     info("userが登録されていません")
-    return redirect("/")
+    return ctx.redirect("/")
   else:
     if password == digitPass:  
-      # 登録されてたらcookieにusernameをいれてredirectする
+      # 登録されてたらcookieにusernameをいれてctx.redirectする
       ctx.cookie["username"] = username
-      return redirect("/logged_in")
+      return ctx.redirect("/logged_in")
     else:
-      ## passwordの間違いなのでloginにredirectさせる
+      ## passwordの間違いなのでloginにctx.redirectさせる
       info("passwordの間違いかもしれない")
-      return redirect("/")
+      return ctx.redirect("/")
 
 proc logout(ctx: DachCtx): Resp =  # post
 #  let
 #    username = ctx.form["email"]
 #  app.session.del(username)
-  redirect("/")
+  ctx.redirect("/")
 
 app.get("/debug"):
   debugDBprint()
-  redirect("/")
+  ctx.redirect("/")
 
 app.addRoute("/", "index")
 app.addRoute("/register", "regist")

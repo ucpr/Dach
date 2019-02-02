@@ -6,6 +6,6 @@ app.get "/":
   ctx.response("Hello World")
 
 app.get "/hoge":
-  redirect("/")
+  ctx.redirect("/")
 
 app.run()
