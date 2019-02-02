@@ -3,7 +3,7 @@ import dach
 import asynchttpserver
 
 import sequtils, random, std/sha1, cookies, strtabs
-import strutils
+import strutils, logging
 import db_mysql
 
 import html
@@ -25,8 +25,10 @@ let db = app.session
 
 proc debugDBprint() =
   # DBの中身全部プリントしちゃうお
+  echo "\n" & "===========================" & "\n"
   for i in db.rows(sql"select * from user_table"):
     echo i
+  echo "\n" & "===========================" & "\n"
 
 proc randomStr(n: int): string =
   result = ""
@@ -72,12 +74,12 @@ proc regist(ctx: DachCtx): Resp =  # post
   if existsUser == "":  # userが登録されてない場合
     register(username, password)
     ctx.cookie["username"] = username
-    return redirect("/")  ## ここはlogin後のページ
+    return redirect("/logged_in")  ## ここはlogin後のページ
   else:  # 登録されていたらindexにredirect
     return redirect("/")  ## loginページ
 
 proc login(ctx: DachCtx): Resp =  # post
-  debugDBprint()
+#  debugDBprint()
   let
     username = ctx.form["email"]
     password = ctx.form["password"]
@@ -86,7 +88,8 @@ proc login(ctx: DachCtx): Resp =  # post
 
   if digitPass == "":  
     # userが登録されてない場合は register にredirect
-    return redirect("/register")
+    info("userが登録されていません")
+    return redirect("/")
   else:
     if password == digitPass:  
       # 登録されてたらcookieにusernameをいれてredirectする
@@ -94,12 +97,17 @@ proc login(ctx: DachCtx): Resp =  # post
       return redirect("/logged_in")
     else:
       ## passwordの間違いなのでloginにredirectさせる
+      info("passwordの間違いかもしれない")
       return redirect("/")
 
 proc logout(ctx: DachCtx): Resp =  # post
 #  let
 #    username = ctx.form["email"]
 #  app.session.del(username)
+  redirect("/")
+
+app.get("/debug"):
+  debugDBprint()
   redirect("/")
 
 app.addRoute("/", "index")
