@@ -3,6 +3,7 @@ import strutils
 import httpcore
 
 import times
+import random
 
 import critbittree, response
 
@@ -62,25 +63,68 @@ if isMainModule:
     "/ascii/name",
     "/namespace",
     "/lang",
-    "/lang/java",
     "/lang/javascript",
     "/lang/python",
     "/lang/ruby",
-    "/lang/nim"
+    "/lang/nim",
+    "/sechack365/user",
+    "/sechack365/user/name",
+    "/sechack365/user/age",
+    "/sechack365/user/profile",
+    "/sechack365/user/email",
+    "/sechack365/okinawa",
+    "/sechack365/ehime",
+    "/sechack365/kanagawa",
+    "/sechack365/hokkaido",
+    "/sechack365/hukuoka",
+    "/sechack365/user/hoge",
+    "/sechack365/user/name/hoge",
+    "/sechack365/user/age/hoge",
+    "/sechack365/user/profile/hoge",
+    "/sechack365/user/email/hoge",
+    "/sechack365/okinawa/hoge",
+    "/sechack365/ehime/hoge",
+    "/sechack365/kanagawa/nay",
+    "/sechack365/hokkaido/poen",
+    "/sechack365/hukuoka/fdsfs",
+
+    "/nums/one/nyan",
+    "/nums/tow",
+    "/nums/three/hoge",
+    "/nums/four",
+    "/nums/five",
+    "/nums/six/fdsf",
+    "/nums/seven/dfdsf",
+    "/nums/eight",
+    "/nums/nine",
+    "/nums/ten/fllll"
     ]
   var r = newRouter()
 
   proc cb(ctx: DachCtx): Resp =
     ctx.response("Hello World")
 
-  let old = cpuTime()
 
   for p in l:
     r.addRule(p, HttpGet, cb)
-  echo "routing time: ", cpuTime() - old
+#  echo "routing time: ", cpuTime() - dachold
 
-  for p in l:
-    discard r.hasRule(p, HttpGet)
+  var list: seq[string] = l
+  shuffle(list)
+ 
+  let dachold = cpuTime()
+  for p in list:
+    if not r.hasRule(p, HttpGet):
+      echo false
+  echo "hasRule time: ", cpuTime() - dachold
 
+  let old = cpuTime()
+#  for p in l:
+#    r.addRule(p, HttpGet, cb)
+#  echo "routing time: ", cpuTime() - old
+  for p in list:
+    for i in l:
+      if p == i:
+        break
   echo "hasRule time: ", cpuTime() - old
 
