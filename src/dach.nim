@@ -17,11 +17,13 @@
 ##    app.run()
 ##
 
-import asyncdispatch, asynchttpserver, httpcore
+import asyncdispatch, asynchttpserver, uri, httpcore
 import strformat, strutils
 import tables
 import macros
 import db_mysql
+
+import nest
 
 import dach/[route, response, configrator, logger, cookie, session]
 
@@ -30,11 +32,11 @@ import dach/[route, response, configrator, logger, cookie, session]
 
 export cookie, response, httpcore, session
 export tables
-export route except get
+#export route except get
 
 type
   Dach* = ref object
-    router: Router
+    router: Router[CallBack]
     config: Configurator
     routeNames: Table[string, string]
     session*: Dbconn
@@ -43,7 +45,7 @@ proc newDach*(filename: string = ""): Dach =
   ## Create a new Dach instance
   result = new Dach
 
-  result.router = newRouter()
+  result.router = newDachRouter()
   result.routeNames = initTable[string, string]()
 
   if filename == "":
@@ -81,11 +83,7 @@ proc addView*(r: var Dach, name: string, hm: HttpMethod, cb: CallBack) =
     return
     # raise exception
   let rule = r.routeNames[name]
-
-  if not r.router.hasRule(rule, hm):
-    r.router.addRule(rule, hm, cb)
-  else:
-    return  ## Future: raise Exception
+  r.router.addRule(rule, hm, cb)
 
 proc parseBodyQuery(s: string): Table[string, string] =
   result = initTable[string, string]()
@@ -96,6 +94,7 @@ proc parseBodyQuery(s: string): Table[string, string] =
 
 proc run*(r: Dach) =
   ## running Dach application.
+  r.router.compress()
   let
     server = newAsyncHttpServer()
     port = r.config.port
@@ -109,16 +108,16 @@ proc run*(r: Dach) =
       url = req.url.path
       hm = req.reqMethod
       form = parseBodyQuery(req.body)
+    let res = r.router.route(($hm).toLower, parseUri(url))
 
-    if r.router.hasRule(url, hm):
+    if res.status == routingSuccess:
       var ctx = newDachCtx()
       ctx.form = form
       ctx.req = req
       let 
-        resp = r.router.get(url, hm)(ctx)
-        statucode = resp.statuscode
-      info(fmt"{$hm} {url} {statucode}")
-      await req.respond(resp.statuscode, resp.content, resp.headers)
+        resp = res.handler(ctx)
+      info(fmt"{$hm} {url} {$Http200}")
+      await req.respond(Http200, resp.content, resp.headers)
     else:
       info(fmt"{$hm} {url} {$Http404}")
       await req.respond(Http404, "Not Found")
@@ -126,91 +125,4 @@ proc run*(r: Dach) =
   echo fmt"Running on localhost:8080"
   waitFor server.serve(port=Port(port), handler, address=address)
 #  httpbeast.run(handler, settings)
-
-macro get*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  ##
-  ## .. code-block::nim
-  ##    import dach
-  ##    var app = newDach()
-  ##    
-  ##    app.get "/":
-  ##      ctx.response("Hello World")
-  ##    
-  ##    app.run()
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
-
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): Resp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpGet, cb)"""
-  result = parseStmt(mainNode)
-
-macro post*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
-
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): Resp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpPost, cb)"""
-  result = parseStmt(mainNode)
-
-macro put*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
-
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): Resp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpPut, cb)"""
-  result = parseStmt(mainNode)
-
-macro head*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
-
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): Resp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpHead, cb)"""
-  result = parseStmt(mainNode)
-
-macro delete*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
-
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): Resp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpDelete, cb)"""
-  result = parseStmt(mainNode)
-
-macro options*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
-
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): Resp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpOptions, cb)"""
-  result = parseStmt(mainNode)
 
