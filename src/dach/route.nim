@@ -1,11 +1,9 @@
 import httpcore
-import uri, strutils, macros
+import uri, strutils, strformat, macros
 
 import nest
 
-#import response
-
-type CallBack = proc (): string 
+import response
 
 type 
   DachRouter* = Router[CallBack]
@@ -17,6 +15,8 @@ proc newDachRouter*(): DachRouter =
 proc addRule*(r: var DachRouter, rule: string, hm: HttpMethod, cb: CallBack) =
   ## mapping to router
   r.map(cb, ($hm).toLower, rule)
+
+# Routing macros
 
 macro get*(head, path, body: untyped): untyped =
   ## Add rule to router
@@ -104,4 +104,26 @@ block:
 {strBody}
   {repr(head)}.router.addRule(""{repr(path)}"", HttpOptions, cb)"""
   result = parseStmt(mainNode)
+
+if isMainModule:
+  var
+    router = newDachRouter()
+    ctx = newDachCtx()
+
+  proc cb(ctx: DachCtx): Resp =
+    return (statuscode: Http200, content: "Hello World", headers: newHttpHeaders())
+
+  router.addRule("/", HttpGet, cb)
+  router.addRule("/hoge", HttpGet, cb)
+
+  router.compress()
+
+  let
+    indexRes = router.route(($HttpGet).toLower, parseUri("/"))
+    hogeRes = router.route(($HttpGet).toLower, parseUri("/hoge"))
+    missingRes = router.route(($HttpGet).toLower, parseUri("/missing"))
+  
+  assert indexRes.status == routingSuccess
+  assert hogeRes.status == routingSuccess
+  assert missingRes.status != routingSuccess
 
