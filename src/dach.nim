@@ -30,7 +30,7 @@ import dach/[route, response, configrator, logger, cookie, session]
 #include dach/cookie
 #include dach/response
 
-export cookie, response, httpcore, session
+export cookie, response, httpcore, session, route
 export tables
 #export route except get
 
