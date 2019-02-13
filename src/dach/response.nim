@@ -1,5 +1,5 @@
 import json
-import tables
+import strtabs
 import httpcore
 import strutils
 import asyncHttpServer
@@ -16,8 +16,8 @@ type
     statuscode*: HttpCode
     headers*: HttpHeaders
     cookie*: Cookie
-    query*: Table[string, string]
-    form*: Table[string, string]
+    query*: StringTableRef
+    form*: StringTableRef
     req*: Request
 
   CallBack* = proc (ctx: DachCtx): Resp
