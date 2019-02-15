@@ -17,13 +17,19 @@
 ##    app.run()
 ##
 
-import asyncdispatch, asynchttpserver, uri, httpcore
+import asyncdispatch, uri, httpcore
 import strformat, strutils
 import tables
 import macros
 import db_mysql
 
 import nest
+
+when not defined(windows):
+  import options
+  import httpbeast
+else:
+  import asynchttpserver
 
 import dach/[route, response, configrator, logger, cookie, session]
 
@@ -92,37 +98,46 @@ proc parseBodyQuery(s: string): Table[string, string] =
       let param = query.split("=")
       result[param[0]] = param[1]
 
+proc parseUri(path: string): string =
+  discard
+
+proc createDachCtx(req: Request): DachCtx =
+  discard
+
 proc run*(r: Dach) =
   ## running Dach application.
   r.router.compress()
   let
-    server = newAsyncHttpServer()
     port = r.config.port
     address = r.config.address
 
   if r.config.debug == true:
     dachConsoleLogger()
+  when defined(windows):
+    let server = newAsyncHttpServer()
+    proc handler(req: Request) {.async.} =
+      let
+        url = req.url.path
+        hm = req.reqMethod
+        form = parseBodyQuery(req.body)
+        res = r.router.route(($hm).toLower, parseUri(url))
 
-  proc handler(req: Request) {.async.} =
-    let
-      url = req.url.path
-      hm = req.reqMethod
-      form = parseBodyQuery(req.body)
-    let res = r.router.route(($hm).toLower, parseUri(url))
+      if res.status == routingSuccess:
+        var ctx = newDachCtx()
+        ctx.form = form
+        ctx.req = req
+        let 
+          resp = res.handler(ctx)
+        info(fmt"{$hm} {url} {$Http200}")
+        await req.respond(Http200, resp.content, resp.headers)
+      else:
+        info(fmt"{$hm} {url} {$Http404}")
+        await req.respond(Http404, "Not Found")
+    waitFor server.serve(port=Port(port), handler, address=address)
+  else:
+    proc handler(req: Request): Future[void] =
+      discard
 
-    if res.status == routingSuccess:
-      var ctx = newDachCtx()
-      ctx.form = form
-      ctx.req = req
-      let 
-        resp = res.handler(ctx)
-      info(fmt"{$hm} {url} {$Http200}")
-      await req.respond(Http200, resp.content, resp.headers)
-    else:
-      info(fmt"{$hm} {url} {$Http404}")
-      await req.respond(Http404, "Not Found")
-
-  echo fmt"Running on localhost:8080"
-  waitFor server.serve(port=Port(port), handler, address=address)
+    discard
 #  httpbeast.run(handler, settings)
 
