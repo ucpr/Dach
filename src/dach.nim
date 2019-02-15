@@ -25,13 +25,13 @@ import db_mysql
 
 import nest
 
-when not defined(windows):
+import dach/[route, response, configrator, logger, cookie, session]
+
+when useHttpBeast:
   import options
   import httpbeast
 else:
   import asynchttpserver
-
-import dach/[route, response, configrator, logger, cookie, session]
 
 #include dach/cookie
 #include dach/response
@@ -98,11 +98,15 @@ proc parseBodyQuery(s: string): Table[string, string] =
       let param = query.split("=")
       result[param[0]] = param[1]
 
-proc parseUri(path: string): string =
-  discard
-
 proc createDachCtx(req: Request): DachCtx =
-  discard
+  result = newDachCtx()
+  when useHttpBeast:
+    discard
+  else:
+    result.uri = parseUri(req.url.path)
+    result.httpmethod = req.reqMethod
+#    result.form = parseBodyQuery(req.body)
+    result.req = req
 
 proc run*(r: Dach) =
   ## running Dach application.
@@ -113,31 +117,25 @@ proc run*(r: Dach) =
 
   if r.config.debug == true:
     dachConsoleLogger()
-  when defined(windows):
+
+  when useHttpBeast:
+    proc handler(req: Request): Future[void] =
+      discard
+    echo fmt"Running on {address}:{port} with httpbeast"
+    httpbeast.run(handler, settings)
+  else:
     let server = newAsyncHttpServer()
     proc handler(req: Request) {.async.} =
       let
-        url = req.url.path
-        hm = req.reqMethod
-        form = parseBodyQuery(req.body)
-        res = r.router.route(($hm).toLower, parseUri(url))
+        ctx = createDachCtx(req)
+        res = r.router.route(($ctx.httpmethod).toLower, ctx.uri)
 
       if res.status == routingSuccess:
-        var ctx = newDachCtx()
-        ctx.form = form
-        ctx.req = req
-        let 
-          resp = res.handler(ctx)
-        info(fmt"{$hm} {url} {$Http200}")
+        let resp = res.handler(ctx)
         await req.respond(Http200, resp.content, resp.headers)
       else:
-        info(fmt"{$hm} {url} {$Http404}")
+        info(fmt"{$ctx.httpmethod} {ctx.uri} {$ctx.statuscode}")
         await req.respond(Http404, "Not Found")
+    echo fmt"Running on {address}:{port} with asynchttpserver"
     waitFor server.serve(port=Port(port), handler, address=address)
-  else:
-    proc handler(req: Request): Future[void] =
-      discard
-
-    discard
-#  httpbeast.run(handler, settings)
 

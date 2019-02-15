@@ -2,9 +2,14 @@ import json
 import strtabs
 import httpcore
 import strutils
-import asyncHttpServer
+import uri
 
-import cookie
+import cookie, configrator
+
+when useHttpBeast:
+  import httpbeast
+else:
+  import asynchttpserver
 
 type
   Resp* = tuple
@@ -13,6 +18,8 @@ type
     headers: HttpHeaders
 
   DachCtx* = ref object
+    uri*: Uri
+    httpmethod*: HttpMethod
     statuscode*: HttpCode
     headers*: HttpHeaders
     cookie*: Cookie

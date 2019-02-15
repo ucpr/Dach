@@ -9,6 +9,8 @@ const
   DefaultAddress* = "127.0.0.1"
   DefaultLogFormat* = "[$levelname] $datetime : "
 
+  useHttpBeast* = false
+
 type
   Configurator* = ref object
     debug*: bool
