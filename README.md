@@ -2,6 +2,8 @@
   <img src="img/logo.svg" width=350>
 </div>
 
+<div align="right">Design by <a href="https://github.com/10riridk0">@10riridk0</a></div>
+
 <div align="center">
   <img src="https://travis-ci.com/nve3pd/Dach.svg?branch=master">
   <img src="https://img.shields.io/github/license/MasoniteFramework/core.svg" alt="License"> 
