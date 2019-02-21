@@ -19,6 +19,8 @@ NOTE: This is still a dev version.
 ## Requirement
 
 - Nim >= 0.18.0
+- nest
+- httpbeast
 
 ## Install
 
