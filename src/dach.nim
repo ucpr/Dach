@@ -101,7 +101,9 @@ proc parseBodyQuery(s: string): Table[string, string] =
 proc createDachCtx(req: Request): DachCtx =
   result = newDachCtx()
   when useHttpBeast:
-    discard
+    result.uri = parseUri(req.path.get())
+    result.httpmethod = req.httpMethod.get()
+    result.req = req
   else:
     result.uri = parseUri(req.url.path)
     result.httpmethod = req.reqMethod
@@ -119,8 +121,20 @@ proc run*(r: Dach) =
     dachConsoleLogger()
 
   when useHttpBeast:
+    let settings = httpbeast.initSettings(Port(port))
     proc handler(req: Request): Future[void] =
-      discard
+      let
+        ctx = createDachCtx(req)
+        res = r.router.route(($ctx.httpmethod).toLower, ctx.uri)
+
+      if res.status == routingSuccess:
+        let resp = res.handler(ctx)
+        info(fmt"{$ctx.httpmethod} {ctx.uri} {$resp.statuscode}")
+        req.send(resp.statuscode, resp.content, $resp.headers)
+      else:
+        info(fmt"{$ctx.httpmethod} {ctx.uri} {Http404}")
+        req.send(Http404, "NOT FOUND")
+
     echo fmt"Running on {address}:{port} with httpbeast"
     httpbeast.run(handler, settings)
   else:
@@ -132,10 +146,12 @@ proc run*(r: Dach) =
 
       if res.status == routingSuccess:
         let resp = res.handler(ctx)
-        await req.respond(Http200, resp.content, resp.headers)
+        info(fmt"{$ctx.httpmethod} {ctx.uri} {$resp.statuscode}")
+        await req.respond(resp.statuscode, resp.content, resp.headers)
       else:
-        info(fmt"{$ctx.httpmethod} {ctx.uri} {$ctx.statuscode}")
+        info(fmt"{$ctx.httpmethod} {ctx.uri} {Http404}")
         await req.respond(Http404, "Not Found")
+
     echo fmt"Running on {address}:{port} with asynchttpserver"
     waitFor server.serve(port=Port(port), handler, address=address)
 
