@@ -110,6 +110,13 @@ proc createDachCtx(req: Request): DachCtx =
 #    result.form = parseBodyQuery(req.body)
     result.req = req
 
+proc toString(headers: HttpHeaders): string =
+  result = ""
+  for i in headers.pairs:
+    result &= i.key & ":" & i.value
+    result &= "\c\L"
+  result = result.strip()
+
 proc run*(r: Dach) =
   ## running Dach application.
   r.router.compress()
@@ -130,7 +137,8 @@ proc run*(r: Dach) =
       if res.status == routingSuccess:
         let resp = res.handler(ctx)
         info(fmt"{$ctx.httpmethod} {ctx.uri} {$resp.statuscode}")
-        req.send(resp.statuscode, resp.content, $resp.headers)
+        #req.send(resp.statuscode, resp.content, resp.headers.toString())
+        req.send(resp.statuscode, resp.content, "Content-Type: text/plain")
       else:
         info(fmt"{$ctx.httpmethod} {ctx.uri} {Http404}")
         req.send(Http404, "NOT FOUND")
