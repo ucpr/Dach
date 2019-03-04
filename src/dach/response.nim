@@ -35,22 +35,22 @@ proc newDachCtx*(): DachCtx =
   result.statuscode = Http200
   result.headers = newhttpheaders()
 
-proc response*(ctx: DachCtx, content: string, statucode: HttpCode = Http200,
+proc response*(content: string, statucode: HttpCode = Http200,
               contentType: string = "text/plain", header: HttpHeaders = newhttpheaders()): Resp =
   var h = header
   h["Content-Type"] = contentType
   result = (statuscode: statucode, content: content, headers: h)
 
-proc jsonResponse*(ctx: DachCtx, content: JsonNode,
+proc jsonResponse*(content: JsonNode,
                   statucode: HttpCode = Http200, header: HttpHeaders = newhttpheaders()): Resp =
-  ctx.response($content, contentType="appication/json")
+  response($content, contentType="appication/json")
 
-proc jsonResponse*(ctx: DachCtx, content: string,
+proc jsonResponse*(content: string,
                   statucode: HttpCode = Http200, header: HttpHeaders = newhttpheaders()): Resp =
   let jsonNode = parseJson(content)
-  result = ctx.jsonResponse(jsonNode)
+  result = jsonResponse(jsonNode)
 
-proc redirect*(ctx: DachCtx, path: string, header: HttpHeaders = newhttpheaders()): Resp =
+proc redirect*(path: string, header: HttpHeaders = newhttpheaders()): Resp =
   var h = header
   h["Location"] = path
   result = (statuscode: Http303,
