@@ -35,23 +35,24 @@ proc newDachCtx*(): DachCtx =
   result.statuscode = Http200
   result.headers = newhttpheaders()
 
-proc response*(ctx: DachCtx, content: string, contentType: string = "text/plain"): Resp =
-  var header = ctx.headers
-  if ctx.cookie.len != 0:
-    header["set-cookie"] = concat(ctx.cookie)
-  header["Content-Type"] = contentType
-  result = (statuscode: ctx.statuscode, content: content, headers: header)
+proc response*(ctx: DachCtx, content: string, statucode: HttpCode = Http200,
+              contentType: string = "text/plain", header: HttpHeaders = newhttpheaders()): Resp =
+  var h = header
+  h["Content-Type"] = contentType
+  result = (statuscode: statucode, content: content, headers: h)
 
-proc jsonResponse*(ctx: DachCtx, content: JsonNode): Resp =
+proc jsonResponse*(ctx: DachCtx, content: JsonNode,
+                  statucode: HttpCode = Http200, header: HttpHeaders = newhttpheaders()): Resp =
   ctx.response($content, contentType="appication/json")
 
-proc jsonResponse*(ctx: DachCtx, content: string): Resp =
+proc jsonResponse*(ctx: DachCtx, content: string,
+                  statucode: HttpCode = Http200, header: HttpHeaders = newhttpheaders()): Resp =
   let jsonNode = parseJson(content)
   result = ctx.jsonResponse(jsonNode)
 
-proc redirect*(ctx: DachCtx, path: string): Resp =
-  var header = ctx.headers
-  header["Location"] = path
+proc redirect*(ctx: DachCtx, path: string, header: HttpHeaders = newhttpheaders()): Resp =
+  var h = header
+  h["Location"] = path
   result = (statuscode: Http303,
             content: "Redirecting to <a href=\"$1\">$1</a>" % [path],
-            headers: header)
+            headers: h)
