@@ -3,9 +3,9 @@ import dach
 var app = newDach()
  
 app.get "/":
-  ctx.response("Hello World")
+  response("Hello World")
 
 app.get "/hoge":
-  ctx.redirect("/")
+  redirect("/")
 
 app.run()
