@@ -18,7 +18,7 @@ proc addRule*(r: var DachRouter, rule: string, hm: HttpMethod, cb: CallBack) =
 
 # Routing macros
 
-macro get*(head, path, body: untyped): untyped =
+template get*(head, path, body: untyped): untyped =
   ## Add rule to router
   ##
   ## .. code-block::nim
@@ -26,84 +26,70 @@ macro get*(head, path, body: untyped): untyped =
   ##    var app = newDach()
   ##    
   ##    app.get "/":
-  ##      ctx.response("Hello World")
+  ##      result.content = response("Hello World")
   ##    
   ##    app.run()
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpGet, cb)
 
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): DachResp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpGet, cb)"""
-  result = parseStmt(mainNode)
+template post*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpPost, cb)
 
-macro post*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
+template head*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpHead, cb)
 
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): DachResp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpPost, cb)"""
-  result = parseStmt(mainNode)
+template put*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpPut, cb)
 
-macro put*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
+template Delete*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpDelete, cb)
 
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): DachResp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpPut, cb)"""
-  result = parseStmt(mainNode)
+template trace*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpTrace, cb)
 
-macro head*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
+template optioins*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpOptions, cb)
 
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): DachResp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpHead, cb)"""
-  result = parseStmt(mainNode)
+template connect*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpConnect, cb)
 
-macro delete*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
-
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): DachResp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpDelete, cb)"""
-  result = parseStmt(mainNode)
-
-macro options*(head, path, body: untyped): untyped =
-  ## Add rule to router
-  var strBody: string
-  for i in body:
-    strBody.add(fmt"    {repr(i)}" & "\n")
-
-  var mainNode: string = fmt"""
-block:
-  proc cb(ctx: DachCtx): DachResp =
-{strBody}
-  {repr(head)}.router.addRule(""{repr(path)}"", HttpOptions, cb)"""
-  result = parseStmt(mainNode)
+template patch*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpPatch, cb)
 
 if isMainModule:
   var
