@@ -3,6 +3,7 @@ import strtabs
 import httpcore
 import strutils
 import uri
+import mimetypes, os, streams
 
 import cookie, configrator
 
@@ -56,3 +57,22 @@ proc redirect*(path: string, header: HttpHeaders = newhttpheaders()): Resp =
   result = (statuscode: Http303,
             content: "Redirecting to <a href=\"$1\">$1</a>" % [path],
             headers: h)
+
+proc staticResponse*(filename: string, staticDir: string = "statics/", status: HttpCode = Http200,
+                    header: HttpHeaders = newhttpheaders()): Resp =
+  ## response static file.
+  ## 
+  ## If using it as a product, we recommend that you distribute it with nginx etc.
+  let filepath = joinPath(staticDir, filename)
+  if not fileExists(filepath):
+    return (statuscode: Http404, content: "File NOT FOUND", headers: header)
+
+  let
+    n = filepath.readFile
+    (_, _, ext) = splitFile(filename)
+    mts = newMimetypes()
+    contentType = mts.getMimetype(ext.strip(chars={'.'}))
+  var h = header
+  h["Content-Type"] = contentType
+  return (statuscode: status, content: n, headers: h)
+
