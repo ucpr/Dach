@@ -52,6 +52,7 @@ proc newDachResp*(ctx: DachCtx = newDachCtx()): DachResp =
   result = new DachResp
   result.statuscode = ctx.statuscode
   result.headers = ctx.headers
+  result.session = newStringTable()
 
 proc response*(content: string, contentType: string = "text/plain"): DachContent =
   result = (content: content, mimetype: contentType)

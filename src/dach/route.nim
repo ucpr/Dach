@@ -35,7 +35,7 @@ macro get*(head, path, body: untyped): untyped =
 
   var mainNode: string = fmt"""
 block:
-  proc cb(ctx: DachCtx): Resp =
+  proc cb(ctx: DachCtx): DachResp =
 {strBody}
   {repr(head)}.router.addRule(""{repr(path)}"", HttpGet, cb)"""
   result = parseStmt(mainNode)
@@ -48,7 +48,7 @@ macro post*(head, path, body: untyped): untyped =
 
   var mainNode: string = fmt"""
 block:
-  proc cb(ctx: DachCtx): Resp =
+  proc cb(ctx: DachCtx): DachResp =
 {strBody}
   {repr(head)}.router.addRule(""{repr(path)}"", HttpPost, cb)"""
   result = parseStmt(mainNode)
@@ -61,7 +61,7 @@ macro put*(head, path, body: untyped): untyped =
 
   var mainNode: string = fmt"""
 block:
-  proc cb(ctx: DachCtx): Resp =
+  proc cb(ctx: DachCtx): DachResp =
 {strBody}
   {repr(head)}.router.addRule(""{repr(path)}"", HttpPut, cb)"""
   result = parseStmt(mainNode)
@@ -74,7 +74,7 @@ macro head*(head, path, body: untyped): untyped =
 
   var mainNode: string = fmt"""
 block:
-  proc cb(ctx: DachCtx): Resp =
+  proc cb(ctx: DachCtx): DachResp =
 {strBody}
   {repr(head)}.router.addRule(""{repr(path)}"", HttpHead, cb)"""
   result = parseStmt(mainNode)
@@ -87,7 +87,7 @@ macro delete*(head, path, body: untyped): untyped =
 
   var mainNode: string = fmt"""
 block:
-  proc cb(ctx: DachCtx): Resp =
+  proc cb(ctx: DachCtx): DachResp =
 {strBody}
   {repr(head)}.router.addRule(""{repr(path)}"", HttpDelete, cb)"""
   result = parseStmt(mainNode)
@@ -100,7 +100,7 @@ macro options*(head, path, body: untyped): untyped =
 
   var mainNode: string = fmt"""
 block:
-  proc cb(ctx: DachCtx): Resp =
+  proc cb(ctx: DachCtx): DachResp =
 {strBody}
   {repr(head)}.router.addRule(""{repr(path)}"", HttpOptions, cb)"""
   result = parseStmt(mainNode)
@@ -110,8 +110,9 @@ if isMainModule:
     router = newDachRouter()
     ctx = newDachCtx()
 
-  proc cb(ctx: DachCtx): Resp =
-    return (statuscode: Http200, content: "Hello World", headers: newHttpHeaders())
+  proc cb(ctx: DachCtx): DachResp =
+    result = newDachResp()
+    result.content = response("Hello World!")
 
   router.addRule("/", HttpGet, cb)
   router.addRule("/hoge", HttpGet, cb)

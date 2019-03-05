@@ -19,7 +19,7 @@
 
 import asyncdispatch, uri, httpcore
 import strformat, strutils
-import tables
+import tables, strtabs
 import macros
 import db_mysql
 
@@ -45,7 +45,7 @@ type
     router: Router[CallBack]
     config: Configurator
     routeNames: Table[string, string]
-    session*: Dbconn
+    #session*: StringTableRef
 
 proc newDach*(filename: string = ""): Dach =
   ## Create a new Dach instance
@@ -53,6 +53,7 @@ proc newDach*(filename: string = ""): Dach =
 
   result.router = newDachRouter()
   result.routeNames = initTable[string, string]()
+  result.config = newConfigurator()
 
 #  if filename == "":
 #    result.config = newConfigurator()
@@ -134,10 +135,14 @@ proc run*(r: Dach) =
         res = r.router.route(($ctx.httpmethod).toLower, ctx.uri)
 
       if res.status == routingSuccess:
-        let resp = res.handler(ctx)
+        let
+          resp = res.handler(ctx)
+          body = resp.content.content
+          mimetype = resp.content.mimetype
+        var header = resp.headers
+        header["Content-Type"] = mimetype
         info(fmt"{$ctx.httpmethod} {ctx.uri} {$resp.statuscode}")
-        req.send(resp.statuscode, resp.content, resp.headers.toString())
-        #req.send(resp.statuscode, resp.content, "Content-Type: text/plain")
+        req.send(resp.statuscode, body, header.toString())
       else:
         info(fmt"{$ctx.httpmethod} {ctx.uri} {Http404}")
         req.send(Http404, "NOT FOUND")
@@ -152,9 +157,14 @@ proc run*(r: Dach) =
         res = r.router.route(($ctx.httpmethod).toLower, ctx.uri)
 
       if res.status == routingSuccess:
-        let resp = res.handler(ctx)
+        let
+          resp = res.handler(ctx)
+          body = resp.content.content
+          mimetype = resp.content.mimetype
+        var header = resp.headers
+        header["Content-Type"] = mimetype
         info(fmt"{$ctx.httpmethod} {ctx.uri} {$resp.statuscode}")
-        await req.respond(resp.statuscode, resp.content, resp.headers)
+        await req.respond(resp.statuscode, body, header)
       else:
         info(fmt"{$ctx.httpmethod} {ctx.uri} {Http404}")
         await req.respond(Http404, "Not Found")
