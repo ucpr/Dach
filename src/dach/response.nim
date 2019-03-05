@@ -35,18 +35,18 @@ proc newDachCtx*(): DachCtx =
   result.statuscode = Http200
   result.headers = newhttpheaders()
 
-proc response*(content: string, statucode: HttpCode = Http200,
+proc response*(content: string, status: HttpCode = Http200,
               contentType: string = "text/plain", header: HttpHeaders = newhttpheaders()): Resp =
   var h = header
   h["Content-Type"] = contentType
-  result = (statuscode: statucode, content: content, headers: h)
+  result = (statuscode: status, content: content, headers: h)
 
 proc jsonResponse*(content: JsonNode,
-                  statucode: HttpCode = Http200, header: HttpHeaders = newhttpheaders()): Resp =
+                  status: HttpCode = Http200, header: HttpHeaders = newhttpheaders()): Resp =
   response($content, contentType="appication/json")
 
 proc jsonResponse*(content: string,
-                  statucode: HttpCode = Http200, header: HttpHeaders = newhttpheaders()): Resp =
+                  status: HttpCode = Http200, header: HttpHeaders = newhttpheaders()): Resp =
   let jsonNode = parseJson(content)
   result = jsonResponse(jsonNode)
 
