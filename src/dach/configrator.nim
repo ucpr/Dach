@@ -9,24 +9,24 @@ const
   DefaultAddress* = "127.0.0.1"
   DefaultLogFormat* = "[$levelname] $datetime : "
 
-  useHttpBeast* = false
+  useHttpBeast* = true
 
 type
   Configurator* = ref object
     debug*: bool
     port*: uint16
     address*: string
-    case isUseSession*: bool:
-      of true:
-        # db_mysql.open
-        sessionConnection*: string  # 127.0.0.1:3314
-        sessionServerUser*: string
-        sessionServerPassword*: string
-        sessionServerDatabase*: string
-
-        secretKey*: string
-      of false:
-        discard
+#    case isUseSession*: bool:
+#      of true:
+#        # db_mysql.open
+#        sessionConnection*: string  # 127.0.0.1:3314
+#        sessionServerUser*: string
+#        sessionServerPassword*: string
+#        sessionServerDatabase*: string
+#
+#        secretKey*: string
+#      of false:
+#        discard
 
 
 #    logFormat*: string

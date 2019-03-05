@@ -54,18 +54,18 @@ proc newDach*(filename: string = ""): Dach =
   result.router = newDachRouter()
   result.routeNames = initTable[string, string]()
 
-  if filename == "":
-    result.config = newConfigurator()
-  else:
-    result.config = loadConfigFile(filename)
-
-  if result.config.isUseSession:
-    let
-      con = result.config.sessionConnection
-      user = result.config.sessionServerUser
-      pass = result.config.sessionServerPassword
-      database = result.config.sessionServerDatabase
-    result.session = newSession(con, user, pass, database)
+#  if filename == "":
+#    result.config = newConfigurator()
+#  else:
+#    result.config = loadConfigFile(filename)
+#
+#  if result.config.isUseSession:
+#    let
+#      con = result.config.sessionConnection
+#      user = result.config.sessionServerUser
+#      pass = result.config.sessionServerPassword
+#      database = result.config.sessionServerDatabase
+#    result.session = newSession(con, user, pass, database)
 
 proc addRoute*(r: var Dach, rule, name: string) =
   ## Add route and route name
