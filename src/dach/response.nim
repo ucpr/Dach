@@ -47,6 +47,12 @@ proc newDachCtx*(): DachCtx =
   result.statuscode = Http200
   result.headers = newhttpheaders()
 
+proc newDachResp(ctx: DachCtx = newDachCtx()): DachResp =
+  ## Create a new DachResp instance
+  result = new DachResp
+  result.statuscode = ctx.statuscode
+  result.headers = ctx.headers
+
 proc response*(content: string, contentType: string = "text/plain"): DachContent =
   result = (content: content, mimetype: contentType)
 
