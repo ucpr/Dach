@@ -58,7 +58,7 @@ proc response*(content: string, contentType: string = "text/plain"): DachContent
   result = (content: content, mimetype: contentType)
 
 proc jsonResponse*(content: JsonNode): DachContent =
-  response($content, contentType="appication/json")
+  response($content, contentType="application/json")
 
 proc jsonResponse*(content: string): DachContent =
   let jsonNode = parseJson(content)
