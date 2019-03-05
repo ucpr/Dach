@@ -10,8 +10,9 @@ srcDir        = "src"
 
 requires "nim >= 0.18.0"
 
-requires "parsetoml"
+#requires "parsetoml"
 requires "nest"
+requires "nimAES"
 
 when not defined(windows):
   requires "httpbeast"
