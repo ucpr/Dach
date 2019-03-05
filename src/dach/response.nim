@@ -39,7 +39,7 @@ type
     form*: StringTableRef
     req*: Request
 
-  CallBack* = proc (ctx: DachCtx, resp: DachResp): DachResp
+  CallBack* = proc (ctx: DachCtx): DachResp
 
 proc newDachCtx*(): DachCtx =
   ## Create a new DachCtx instance.
@@ -47,8 +47,8 @@ proc newDachCtx*(): DachCtx =
   result.statuscode = Http200
   result.headers = newhttpheaders()
 
-proc newDachResp(ctx: DachCtx = newDachCtx()): DachResp =
-  ## Create a new DachResp instance
+proc newDachResp*(ctx: DachCtx = newDachCtx()): DachResp =
+  ## Create a new Dach Response instance
   result = new DachResp
   result.statuscode = ctx.statuscode
   result.headers = ctx.headers
@@ -63,10 +63,18 @@ proc jsonResponse*(content: string): DachContent =
   let jsonNode = parseJson(content)
   result = jsonResponse(jsonNode)
 
-#proc redirect*(resp: var DachResp, path: string): Resp =
-#  resp.headers["Location"] = path
-#  resp.statuscode = Http303
-#  result = (content: "Redirecting to <a href=\"$1\">$1</a>" % [path])
+proc redirect*(resp: var DachResp, path: string) =
+  ##  redirect to `path`
+  ##
+  ## .. code-block::nim
+  ##    proc cb(ctx: DachCtx): DachResp =
+  ##      result = newDachResp()
+  ##      result.redirect("/red")
+  ##
+  resp.headers["Location"] = path
+  resp.statuscode = Http303
+  resp.content = (content: "Redirecting to <a href=\"$1\">$1</a>" % [path],
+                  mimetype: "text/html")
 
 proc staticResponse*(filename: string, staticDir: string = "statics/"): DachContent =
   ## response static file.
