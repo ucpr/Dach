@@ -103,12 +103,11 @@ proc createDachCtx(req: Request): DachCtx =
   when useHttpBeast:
     result.uri = parseUri(req.path.get())
     result.httpmethod = req.httpMethod.get()
-    result.req = req
   else:
     result.uri = parseUri(req.url.path)
     result.httpmethod = req.reqMethod
 #    result.form = parseBodyQuery(req.body)
-    result.req = req
+  result.req = req
 
 proc toString(headers: HttpHeaders): string =
   result = ""
