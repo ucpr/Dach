@@ -14,7 +14,7 @@
 ## Description
 Dach is a tiny web application framework. This project started with SecHack365.  
 
-NOTE: This is still a dev version. 
+NOTE: This is still a beta version. Please note that destructive changes will be made.
 
 ## Requirement
 
@@ -43,8 +43,9 @@ import dach
 
 var app = newDach()
 
-proc cb(ctx: DachCtx): Resp =
-  ctx.response("Hello World")
+proc cb(ctx: DachCtx): DachResp =
+  result = newDachResp()
+  result.content = response("Hello World")
 
 app.addRoute("/", "index")
 app.addView("index", HttpGet, cb)
@@ -59,13 +60,13 @@ import dach
 var app = newDach()
       
 app.get "/":
-  ctx.response("Hello World")
+  result.content = response("Hello World")
       
 app.run()
 ```
 
 ## Usage
-Please reading [dach.html](https://nve3pd.github.io/Dach/doc/dach.html)
+Please check it! [nve3pd.github.io/Dach/doc/dach.html](https://nve3pd.github.io/Dach/doc/dach.html)
 
 ## Author
 Taichi Uchihara (@u\_chi\_ha\_ra\_)
