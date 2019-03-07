@@ -1,10 +1,12 @@
+
 import cookies
 import strutils, strtabs
-import tables
+
 
 type
-  Cookie* = seq[string]
-  CookieTable* = Table[string, string]
+#  Cookie* = seq[string]
+  Cookie* = StringTableRef
+  SessionCookie* = StringTableRef
 
 proc `[]=`*(ck: var Cookie, key, val: string) =
   let s = setCookie(key, val, noName = true)
@@ -13,7 +15,7 @@ proc `[]=`*(ck: var Cookie, key, val: string) =
 proc concat*(c: Cookie): string =
   result = join(c, ";")
 
-proc concat*(c: StringTableRef): string =
+proc concat*(c: Cookie): string =
   result = ""
   for i in c.pairs:
     result &= i.key & "=" & i.value & ";"
