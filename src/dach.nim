@@ -92,8 +92,8 @@ proc addView*(r: var Dach, name: string, hm: HttpMethod, cb: CallBack) =
   let rule = r.routeNames[name]
   r.router.addRule(rule, hm, cb)
 
-proc parseBodyQuery(s: string): Table[string, string] =
-  result = initTable[string, string]()
+proc parseBodyQuery(s: string): StringTableRef =
+  result = newStringTable()
   if s != "":
     for query in s.split("&"):
       let param = query.split("=")
@@ -104,6 +104,7 @@ proc createDachCtx(req: Request): DachCtx =
   when useHttpBeast:
     result.uri = parseUri(req.path.get())
     result.httpmethod = req.httpMethod.get()
+    result.bodyQuery = parseBodyQuery(req.body.get())
     let header = req.headers.get()
     if header.hasKey("cookie"):
       result.cookie = parseCookies(header["cookie"]) 
@@ -112,7 +113,7 @@ proc createDachCtx(req: Request): DachCtx =
   else:
     result.uri = parseUri(req.url.path)
     result.httpmethod = req.reqMethod
-#    result.form = parseBodyQuery(req.body)
+    result.bodyQuery = parseBodyQuery(req.body)
   result.req = req
 
 proc toString(headers: HttpHeaders): string =
@@ -135,9 +136,12 @@ proc run*(r: Dach) =
   when useHttpBeast:
     let settings = httpbeast.initSettings(Port(port))
     proc handler(req: Request): Future[void] =
-      let
+      var 
         ctx = createDachCtx(req)
         res = r.router.route(($ctx.httpmethod).toLower, ctx.uri)
+      ctx.form = res.arguments.queryArgs
+      echo res.arguments.queryArgs
+      ctx.pathQuery = res.arguments.pathArgs
 
       if res.status == routingSuccess:
         let
