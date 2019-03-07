@@ -24,8 +24,8 @@ let indexContent* = "<!DOCTYPE html>" & html(
       label(`for`="inputPassword", class="sr-only", "Password"),
       input(`type`="password", name="password", id="inputPassword", class="form-control", placeholder="Password"),
       button(class="btn btn-lg btn-primary btn-block", `type`="submit", "Sign in"),
-      a(href="/register", "Regist"),
-      p(class="mt-5 mb-3 text-muted", "&copy; 2019"),
+      a(href="/regist", "Regist"),
+      p(class="mt-5 mb-3 text-muted", "nve3pd/dach &copy; 2019"),
     )
   )
 )
@@ -41,7 +41,7 @@ let loggedInContent* = "<!DOCTYPE html>" & html(
     form(class="form-signin", action="/logout", `method`="post",
       h1("This is ログイン後のページです。"),
       button(class="btn btn-lg btn-primary btn-block", `type`="submit", "Logout"),
-      p(class="mt-5 mb-3 text-muted", "&copy; 2019"),
+      p(class="mt-5 mb-3 text-muted", "nve3pd/dach &copy; 2019"),
     )
   )
 )
@@ -55,7 +55,7 @@ let registContent* = "<!DOCTYPE html>" & html(
   ),
 
   body(class="text-center",
-    form(class="form-signin", action="/register", `method`="post",
+    form(class="form-signin", action="/regist", `method`="post",
       h1(class="h3 mb-3 font-weight-normal", "Please regist"),
       label(`for`="inputEmail", class="sr-only", "Email Address"),
       input(`type`="email", name="email", id="inputEmail", class="form-control", placeholder="Email Address"),
@@ -63,7 +63,7 @@ let registContent* = "<!DOCTYPE html>" & html(
       input(`type`="password", name="password", id="inputPassword", class="form-control", placeholder="Password"),
       button(class="btn btn-lg btn-primary btn-block", `type`="submit", "regist!"),
       a(href="/", "Login"),
-      p(class="mt-5 mb-3 text-muted", "&copy; 2019"),
+      p(class="mt-5 mb-3 text-muted", "nve3pd/dach &copy; 2019"),
     )
   )
 )

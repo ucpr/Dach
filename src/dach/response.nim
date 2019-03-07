@@ -1,10 +1,16 @@
 import json
-import tables
+import strtabs
 import httpcore
 import strutils
-import asyncHttpServer
+import uri
+import mimetypes, os, streams
 
-import cookie
+import cookie, configrator
+
+when useHttpBeast:
+  import httpbeast
+else:
+  import asynchttpserver
 
 type
   Resp* = tuple
@@ -12,42 +18,80 @@ type
     content: string
     headers: HttpHeaders
 
-  DachCtx* = ref object
+  DachContent* = tuple
+    content: string
+    mimetype: string
+
+  DachResp* = ref object # memo: resp
+    cookie*: Cookie
+    statuscode*: HttpCode
+    headers*: HttpHeaders
+    content*: DachContent
+    session*: StringTableRef
+
+  DachCtx* = ref object  # memo: response object
+    uri*: Uri
+    httpmethod*: HttpMethod
     statuscode*: HttpCode
     headers*: HttpHeaders
     cookie*: Cookie
-    query*: Table[string, string]
-    form*: Table[string, string]
+    pathQuery*: StringTableRef
+    form*: StringTableRef
+    bodyQuery*: StringTableRef
     req*: Request
 
-  CallBack* = proc (ctx: DachCtx): Resp
+  CallBack* = proc (ctx: DachCtx): DachResp
 
 proc newDachCtx*(): DachCtx =
   ## Create a new DachCtx instance.
   result = new DachCtx
   result.statuscode = Http200
   result.headers = newhttpheaders()
+  result.cookie = newStringTable()
 
-proc response*(ctx: DachCtx, content: string): Resp =
-  let header = ctx.headers
-  if ctx.cookie.len != 0:
-    header["Set-Cookie"] = concat(ctx.cookie)
-  result = (statuscode: ctx.statuscode, content: content, headers: ctx.headers)
+proc newDachResp*(ctx: DachCtx = newDachCtx()): DachResp =
+  ## Create a new Dach Response instance
+  result = new DachResp
+  result.statuscode = ctx.statuscode
+  result.headers = ctx.headers
+  result.session = newStringTable()
+  result.cookie = ctx.cookie
 
-proc jsonResponse*(ctx: DachCtx, content: JsonNode): Resp =
-  let header = ctx.headers
-  if ctx.cookie.len != 0:
-    header["Set-Cookie"] = concat(ctx.cookie)
-  header["Content-Type"] = "application/json"
-  result = (statuscode: ctx.statuscode, content: $content, headers: header)
+proc response*(content: string, contentType: string = "text/plain"): DachContent =
+  result = (content: content, mimetype: contentType)
 
-proc jsonResponse*(ctx: DachCtx, content: string): Resp =
+proc jsonResponse*(content: JsonNode): DachContent =
+  response($content, contentType="application/json")
+
+proc jsonResponse*(content: string): DachContent =
   let jsonNode = parseJson(content)
-  result = ctx.jsonResponse(jsonNode)
+  result = jsonResponse(jsonNode)
 
-proc redirect*(path: string): Resp =
-  var header = newhttpheaders()
-  header["Location"] = path
-  result = (statuscode: Http303,
-            content: "Redirecting to <a href=\"$1\">$1</a>" % [path],
-            headers: header)
+proc redirect*(resp: var DachResp, path: string) =
+  ##  redirect to `path`
+  ##
+  ## .. code-block::nim
+  ##    proc cb(ctx: DachCtx): DachResp =
+  ##      result = newDachResp()
+  ##      result.redirect("/red")
+  ##
+  resp.headers["Location"] = path
+  resp.statuscode = Http303
+  resp.content = (content: "Redirecting to <a href=\"$1\">$1</a>" % [path],
+                  mimetype: "text/html")
+
+proc staticResponse*(filename: string, staticDir: string = "statics/"): DachContent =
+  ## response static file.
+  ## 
+  ## If using it as a product, we recommend that you distribute it with nginx etc.
+  let filepath = joinPath(staticDir, filename)
+  if not fileExists(filepath):
+    return response("FILE NOT FOUND")
+
+  let
+    n = filepath.readFile
+    (_, _, ext) = splitFile(filename)
+    mts = newMimetypes()
+    mimetype = mts.getMimetype(ext.strip(chars={'.'}))
+  return response(n, mimetype)
+

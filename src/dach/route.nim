@@ -1,86 +1,116 @@
-import tables
-import strutils
 import httpcore
+import uri, strutils, strformat, macros
 
-import times
+import nest
 
-import critbittree, response
+import response
 
 type 
-#  HttpMethod* = enum
-#    GET = "GET"
-#    POST = "PUT"
-#    PUT = "PUT"
-#    HEAD = "HEAD"
-#    DELEATE = "DELEATE"
-#    OPTIONS = "OPTIONS"
+  DachRouter* = Router[CallBack]
 
-#  CallBack = proc(): string
-#  Parameters = Table[string, string]
+proc newDachRouter*(): DachRouter =
+  ## create new DachRouter instance
+  result = newRouter[CallBack]()
 
-  Items = ref object
-    rule: string
-#    hm: HttpMethod
-    callbacks: Table[HttpMethod, CallBack]
-  #paramIndices: array 
+proc addRule*(r: var DachRouter, rule: string, hm: HttpMethod, cb: CallBack) =
+  ## mapping to router
+  r.map(cb, ($hm).toLower, rule)
 
-  Router* = CritBitTree[Items]
+# Routing macros
 
-proc newRouter*(): Router =
-  var router: CritBitTree[Items]
-  return router
+template get*(head, path, body: untyped): untyped =
+  ## Add rule to router
+  ##
+  ## .. code-block::nim
+  ##    import dach
+  ##    var app = newDach()
+  ##    
+  ##    app.get "/":
+  ##      result.content = response("Hello World")
+  ##    
+  ##    app.run()
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpGet, cb)
 
-proc addRule*(r: var Router, rule: string, hm: HttpMethod, callback: CallBack) =
-  if not r.hasKey(rule):
-    var item = new Items
-    item.callbacks = initTable[HttpMethod, CallBack]()
-    item.rule = rule
-    item.callbacks[hm] = callback
-    r[rule] = item
-  else:
-    r[rule].callbacks[hm] = callback
+template post*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpPost, cb)
 
-proc hasRule*(r: Router, rule: string, hm: HttpMethod): bool =
-  if (not r.hasKey(rule)) or (not r[rule].callbacks.hasKey(hm)):
-    return false
-  else:
-    return true
+template head*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpHead, cb)
 
-proc get*(r: Router, rule: string, hm: HttpMethod): CallBack =
-  result = r[rule].callbacks[hm]
+template put*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpPut, cb)
+
+template Delete*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpDelete, cb)
+
+template trace*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpTrace, cb)
+
+template optioins*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpOptions, cb)
+
+template connect*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpConnect, cb)
+
+template patch*(head, path, body: untyped): untyped =
+  block:
+    proc cb(ctx: DachCtx): DachResp =
+      result = ctx.newDachResp()
+      body
+    head.router.addRule(path, HttpPatch, cb)
 
 if isMainModule:
-  let l = @[
-    "/",
-    "/user",
-    "/user/profile",
-    "/user/ac",
-    "/user/account",
-    "/user/char",
-    "/user/hoge",
-    "/ascii/hoge",
-    "/ascii/name",
-    "/namespace",
-    "/lang",
-    "/lang/java",
-    "/lang/javascript",
-    "/lang/python",
-    "/lang/ruby",
-    "/lang/nim"
-    ]
-  var r = newRouter()
+  var
+    router = newDachRouter()
+    ctx = newDachCtx()
 
-  proc cb(ctx: DachCtx): Resp =
-    ctx.response("Hello World")
+  proc cb(ctx: DachCtx): DachResp =
+    result = newDachResp()
+    result.content = response("Hello World!")
 
-  let old = cpuTime()
+  router.addRule("/", HttpGet, cb)
+  router.addRule("/hoge", HttpGet, cb)
 
-  for p in l:
-    r.addRule(p, HttpGet, cb)
-  echo "routing time: ", cpuTime() - old
+  router.compress()
 
-  for p in l:
-    discard r.hasRule(p, HttpGet)
-
-  echo "hasRule time: ", cpuTime() - old
+  let
+    indexRes = router.route(($HttpGet).toLower, parseUri("/"))
+    hogeRes = router.route(($HttpGet).toLower, parseUri("/hoge"))
+    missingRes = router.route(($HttpGet).toLower, parseUri("/missing"))
+  
+  assert indexRes.status == routingSuccess
+  assert hogeRes.status == routingSuccess
+  assert missingRes.status != routingSuccess
 
