@@ -35,8 +35,9 @@ type
     statuscode*: HttpCode
     headers*: HttpHeaders
     cookie*: Cookie
-    query*: StringTableRef
+    pathQuery*: StringTableRef
     form*: StringTableRef
+    bodyQuery*: StringTableRef
     req*: Request
 
   CallBack* = proc (ctx: DachCtx): DachResp
