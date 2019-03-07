@@ -17,7 +17,7 @@
 ##    app.run()
 ##
 
-import asyncdispatch, uri, httpcore
+import asyncdispatch, uri, httpcore, cookies
 import strformat, strutils
 import tables, strtabs
 import macros
@@ -42,7 +42,7 @@ export tables
 
 type
   Dach* = ref object
-    router: Router[CallBack]
+    router*: Router[CallBack]
     config: Configurator
     routeNames: Table[string, string]
     #session*: StringTableRef
@@ -104,6 +104,11 @@ proc createDachCtx(req: Request): DachCtx =
   when useHttpBeast:
     result.uri = parseUri(req.path.get())
     result.httpmethod = req.httpMethod.get()
+    let header = req.headers.get()
+    if header.hasKey("cookie"):
+      result.cookie = parseCookies(header["cookie"]) 
+    else:
+      result.cookie = newStringTable()
   else:
     result.uri = parseUri(req.url.path)
     result.httpmethod = req.reqMethod
@@ -141,6 +146,7 @@ proc run*(r: Dach) =
           mimetype = resp.content.mimetype
         var header = resp.headers
         header["Content-Type"] = mimetype
+        header["Set-Cookie"] = resp.cookie.concat()
         info(fmt"{$ctx.httpmethod} {ctx.uri} {$resp.statuscode}")
         req.send(resp.statuscode, body, header.toString())
       else:
@@ -163,6 +169,7 @@ proc run*(r: Dach) =
           mimetype = resp.content.mimetype
         var header = resp.headers
         header["Content-Type"] = mimetype
+        header["Set-Cookie"] = resp.cookie.concat()
         info(fmt"{$ctx.httpmethod} {ctx.uri} {$resp.statuscode}")
         await req.respond(resp.statuscode, body, header)
       else:
