@@ -12,8 +12,7 @@ randomize()
 
 var app = newDach("config.toml")
 # dbを別で使うときはopenしたやつを渡してあげる
-app.session = newSession("127.0.0.1:3314", "root", "root", "dach_sample")
-let db = app.session
+let db = open("127.0.0.1:3314", "root", "root", "dach_sample")
 
 ## Init Database
 #db.exec(sql"""
@@ -43,75 +42,80 @@ proc register(username, password: string) =
 #  db.exec(sql"INSERT INTO user_table (username, password, salt) VALUES (?, ?, ?)", username, passDigest, salt)
   db.exec(sql"INSERT INTO user_table (username, password, salt) VALUES (?, ?, ?)", username, password, salt)
 
-proc index(ctx: DachCtx): Resp =  # get
-  ctx.response(indexContent)
+proc index(ctx: DachCtx): DachResp =  # get
+  result = ctx.newDachResp()
+  result.content = response(indexContent, "text/html")
 
-proc viewRegist(ctx: DachCtx): Resp = # get
-  ctx.response(registContent)
+proc viewRegist(ctx: DachCtx): DachResp = # get
+  result = ctx.newDachResp()
+  result.content = response(registContent, "text/html")
 
-proc checkSession(req: Request): bool =
-  if not req.headers.hasKey("cookie"):
+proc checkSession(req: Cookie): bool =
+  if not req.hasKey("username"):
     return false
 
-  let cookieTable = req.headers["cookie"].parseCookies()
-  if req.headers.hasKey("cookie") and cookieTable["username"] != "":
+  if req.hasKey("username") and req["username"] != "":
     return true
   else:
     return false
 
-proc loggedInPage(ctx: DachCtx): Resp =
-  if checkSession(ctx.req):
-    ctx.response(loggedInContent)
+proc loggedInPage(ctx: DachCtx): DachResp =
+  result = ctx.newDachResp()
+  if checkSession(ctx.cookie):
+    result.content = response(loggedInContent, "text/html")
   else:
-    ctx.redirect("/")
+    result.redirect("/")
 
-proc regist(ctx: DachCtx): Resp =  # post
+proc regist(ctx: DachCtx): DachResp =  # post
+  result = ctx.newDachResp()
   let
-    username = ctx.form["email"]
-    password = ctx.form["password"]
+    username = ctx.bodyQuery["email"]
+    password = ctx.bodyQuery["password"]
     existsUser = db.getValue(sql"SELECT password FROM user_table WHERE username=?", username)
 
   if existsUser == "":  # userが登録されてない場合
     register(username, password)
     ctx.cookie["username"] = username
-    return ctx.redirect("/logged_in")  ## ここはlogin後のページ
+    result.redirect("/logged_in")  ## ここはlogin後のページ
   else:  # 登録されていたらindexにredirect
-    return ctx.redirect("/")  ## loginページ
+    result.redirect("/")  ## loginページ
 
-proc login(ctx: DachCtx): Resp =  # post
-#  debugDBprint()
+proc login(ctx: DachCtx): DachResp =  # post
+  debugDBprint()
+  result = ctx.newDachResp()
   let
-    username = ctx.form["email"]
-    password = ctx.form["password"]
+    username = ctx.bodyQuery["email"]
+    password = ctx.bodyQuery["password"]
     digitPass = db.getValue(sql"SELECT password FROM user_table WHERE username=?", username)
     salt = db.getValue(sql"SELECT salt FROM user_table WHERE username=?", username)
 
   if digitPass == "":  
     # userが登録されてない場合は register にredirect
     info("userが登録されていません")
-    return ctx.redirect("/")
+    result.redirect("/")
   else:
     if password == digitPass:  
       # 登録されてたらcookieにusernameをいれてctx.redirectする
       ctx.cookie["username"] = username
-      return ctx.redirect("/logged_in")
+      result.redirect("/logged_in")
     else:
       ## passwordの間違いなのでloginにctx.redirectさせる
       info("passwordの間違いかもしれない")
-      return ctx.redirect("/")
+      result.redirect("/")
 
-proc logout(ctx: DachCtx): Resp =  # post
+proc logout(ctx: DachCtx): DachResp =  # post
 #  let
 #    username = ctx.form["email"]
-#  app.session.del(username)
-  ctx.redirect("/")
+  result = ctx.newDachResp()
+  result.cookie.pop("username")
+  result.redirect("/")
 
-app.get("/debug"):
-  debugDBprint()
-  ctx.redirect("/")
+#app.get "/debug":
+#  debugDBprint()
+#  result.redirect("/")
 
 app.addRoute("/", "index")
-app.addRoute("/register", "regist")
+app.addRoute("/regist", "regist")
 app.addRoute("/login", "login")
 app.addRoute("/logout", "logout")
 app.addRoute("/logged_in", "logged_in")
@@ -119,7 +123,6 @@ app.addRoute("/logged_in", "logged_in")
 app.addView("index", HttpGet, index)
 app.addView("regist", HttpGet, viewRegist)
 app.addView("logged_in", HttpGet, loggedInPage)
-
 app.addView("regist", HttpPost, regist)
 app.addView("login", HttpPost, login)
 app.addView("logout", HttpPost, logout)
