@@ -46,6 +46,7 @@ proc newDachCtx*(): DachCtx =
   result = new DachCtx
   result.statuscode = Http200
   result.headers = newhttpheaders()
+  result.cookie = newStringTable()
 
 proc newDachResp*(ctx: DachCtx = newDachCtx()): DachResp =
   ## Create a new Dach Response instance
@@ -53,6 +54,7 @@ proc newDachResp*(ctx: DachCtx = newDachCtx()): DachResp =
   result.statuscode = ctx.statuscode
   result.headers = ctx.headers
   result.session = newStringTable()
+  result.cookie = ctx.cookie
 
 proc response*(content: string, contentType: string = "text/plain"): DachContent =
   result = (content: content, mimetype: contentType)
