@@ -5,7 +5,7 @@
 <div align="right">Design by <a href="https://github.com/10riridk0">@10riridk0</a></div>
 
 <div align="center">
-  <img src="https://travis-ci.com/nve3pd/Dach.svg?branch=master">
+  <img src="https://travis-ci.com/ucpr/Dach.svg?branch=master">
   <img src="https://img.shields.io/github/license/MasoniteFramework/core.svg" alt="License"> 
 </div>
 
@@ -25,13 +25,13 @@ NOTE: This is still a beta version. Please note that destructive changes will be
 ## Install
 
 ```
-$ git clone https://github.com/nve3pd/dach
+$ git clone https://github.com/ucpr/dach
 $ cd dach
 $ nimble install
 ```
 
 ```
-$ docker pull nve3pd/dach
+$ docker pull ucpr/dach
 ```
 
 ## Example
@@ -66,7 +66,7 @@ app.run()
 ```
 
 ## Usage
-Please check it! [nve3pd.github.io/Dach/doc/dach.html](https://nve3pd.github.io/Dach/doc/dach.html)
+Please check it! [ucpr.github.io/Dach/doc/dach.html](https://ucpr.github.io/Dach/doc/dach.html)
 
 ## Author
 Taichi Uchihara (@u\_chi\_ha\_ra\_)
